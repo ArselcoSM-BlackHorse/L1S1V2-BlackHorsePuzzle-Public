@@ -505,7 +505,7 @@ if ('serviceWorker' in navigator) {
 const email = localStorage.getItem("email");
 
 // Deklarasi variabel utama
-let userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
+//let userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
 
 
 // Pastikan gameProgress selalu ada
@@ -1058,9 +1058,9 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
     <!-- === End form login === style="margin-left:10px;" dikeluarkan dari Resend Code === -->
 
      <!-- Load main.js -->
-    <script src="https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/SplashScene.js?v=20251116-2"></script>
-    <script src="https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level01Scene.js?v=20251116-2"></script>
-    <script src="https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level02Scene.js?v=20251116-2"></script>
+    <script src="https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/SplashScene.js"></script>
+    <script src="https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level01Scene.js"></script>
+    <script src="https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level02Scene.js"></script>
     <script src="./main.js"></script>
     
   
@@ -1244,7 +1244,7 @@ try {
     console.warn('❌ Backend initialization failed, using localStorage fallback:', error);
     
     // ✅ 7. FALLBACK KE LOCALSTORAGE + DEFAULT VALUES
-    let userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
+    //let userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
     
     if (userData.gameProgress) {
       // Update dari localStorage yang ada
@@ -1798,7 +1798,7 @@ window.addEventListener('DOMContentLoaded', async function() {
     };
   }
   const email = localStorage.getItem("email");
-  let userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
+  //let userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
 
   console.log('📄 Enhanced Black Horse Puzzle - Initializing secure system');
   
