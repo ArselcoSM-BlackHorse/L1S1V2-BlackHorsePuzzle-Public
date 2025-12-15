@@ -1140,7 +1140,7 @@ document.addEventListener('visibilitychange', () => {
     // Jika ada timeElapsed yang valid, ambil dari scene, jika tidak, pakai 0
     let time = 0;
     if (window.game && window.game.scene && window.game.scene.getScene) {
-      //const level01 = window.game.scene.getScene("${window.BACKEND_URL}/Scenes/Level01Scene.js");
+      //const level01 = window.game.scene.getScene(`${window.BACKEND_URL}/Scenes/Level01Scene.js`);
       const level01 = window.game.scene.getScene("Level01Scene");
       if (level01 && typeof level01.timeElapsed !== 'undefined') {
         time = level01.timeElapsed;
@@ -1494,7 +1494,7 @@ try {
 
   try {
     const response = await axios.post(
-      '${window.BACKEND_URL}/api/users/verify-email',
+      `${window.BACKEND_URL}/api/users/verify-email`,
       { email, verificationCode: code },
       { timeout: 200000 }
     );
@@ -1511,7 +1511,7 @@ try {
       
       document.getElementById("verificationCodeInput").value = "";
       if (window.Phaser && window.game && window.game.scene) {
-        //window.game.scene.start("${window.BACKEND_URL}/Scenes/SplashScene.js");
+        //window.game.scene.start(`${window.BACKEND_URL}/Scenes/SplashScene.js`);
         window.game.scene.start("SplashScene"); // ✅ BENAR
       }
       if (window.showSuccessNotification) {
@@ -1539,7 +1539,7 @@ console.log('Username yang dikirim:', this.username);
 async function checkEmailVerifiedFromBackend(email) {
   try {
     const response = await axios.post(
-      '${window.BACKEND_URL}/api/users/check-email',
+      `${window.BACKEND_URL}/api/users/check-email`,
       { email: email},
       { timeout: 200000 }
     );
@@ -1570,7 +1570,7 @@ window.gameUtils = {
 window.resendVerificationEmail = async function(email) {
   try {
     const response = await axios.post(
-      '${window.BACKEND_URL}/api/users/resend-verification',
+      `${window.BACKEND_URL}/api/users/resend-verification`,
       { email },
       { timeout: 200000 }
     );
@@ -1908,7 +1908,7 @@ window.addEventListener('DOMContentLoaded', async function() {
         
         
 if (window.Phaser && window.game && window.game.scene) {
-    //window.game.scene.start("${window.BACKEND_URL}/Scenes/SplashScene.js"); //dari Level01Scene ganti ke SplashScene 
+    //window.game.scene.start(`${window.BACKEND_URL}/Scenes/SplashScene.js`); //dari Level01Scene ganti ke SplashScene 
      window.game.scene.start("SplashScene"); // ✅ BENAR
     // Tambahkan kode ini untuk menyembunyikan level01Score:
       setTimeout(() => {
@@ -1959,7 +1959,7 @@ if (window.Phaser && window.game && window.game.scene) {
     if (window.Phaser && window.game && window.game.scene) {
       window.game.scene.scenes.forEach(scene => scene.scene.restart());
       
-      //const level01 = window.game.scene.getScene("${window.BACKEND_URL}/Scenes/Level01Scene.js");
+      //const level01 = window.game.scene.getScene(`${window.BACKEND_URL}/Scenes/Level01Scene.js`);
       const level01 = window.game.scene.getScene("Level01Scene");
       if (level01 && level01.playBtn) {
         level01.playBtn.disableInteractive();
@@ -1974,7 +1974,7 @@ if (window.Phaser && window.game && window.game.scene) {
       
       setTimeout(() => {
         //if (window.Phaser && window.game && window.game.scene) {
-        //window.game.scene.start("${window.BACKEND_URL}/Scenes/SplashScene.js");
+        //window.game.scene.start(`${window.BACKEND_URL}/Scenes/SplashScene.js`);
         window.game.scene.start("SplashScene"); // ✅ BENAR
       }, 1500);
     }
@@ -2013,7 +2013,7 @@ if (window.Phaser && window.game && window.game.scene) {
 async function createPayPalOrder(email, amount, message = 'Black Horse Puzzle Support') {
   try {
     const response = await axios.post(
-      '${window.BACKEND_URL}/api/create-order',
+      `${window.BACKEND_URL}/api/create-order`,
       {
         email,
         amount,
@@ -2055,7 +2055,7 @@ async function capturePayPalOrder(paypalOrderId, email) {
       //localStorage.setItem(`score_${email}`, "0");
       // Unlock fitur game jika scene aktif
       if (window.Level01Scene && typeof window.Level01Scene.prototype.unlockGameAfterPurchase === 'function') {
-        //const scene = window.game && window.game.scene && window.game.scene.getScene("${window.BACKEND_URL}/Scenes/Level01Scene.js");
+        //const scene = window.game && window.game.scene && window.game.scene.getScene(`${window.BACKEND_URL}/Scenes/Level01Scene.js`);
         const scene = window.game && window.game.scene && window.game.scene.getScene("Level01Scene");
         if (scene && typeof scene.unlockGameAfterPurchase === 'function') {
           scene.unlockGameAfterPurchase();
@@ -2083,7 +2083,7 @@ async function verifyPayPalToken(token, payerID, email) {
 
     // Axios tidak mendukung AbortController langsung, jadi timeout pakai config
     const response = await axios.post(
-      '${window.BACKEND_URL}/api/verify-paypal-token',
+      `${window.BACKEND_URL}/api/verify-paypal-token`,
       { token, payerID, email },
       { timeout: 200000 } // timeout dalam ms
     );
@@ -2113,7 +2113,7 @@ async function verifyPayPalOrder(orderId, email) {
 
     // Axios timeout pakai config
     const response = await axios.post(
-      '${window.BACKEND_URL}/api/verify-paypal',
+      `${window.BACKEND_URL}/api/verify-paypal`,
       {paypalOrderId: orderId, email },
       { timeout: 200000 }
     );
@@ -2206,7 +2206,7 @@ async function performSecureLogout() {
       });
       
       // Disable play button
-      //const level01 = window.game.scene.getScene("${window.BACKEND_URL}/Scenes/Level01Scene.js");
+      //const level01 = window.game.scene.getScene(`${window.BACKEND_URL}/Scenes/Level01Scene.js`);
       const level01 = window.game.scene.getScene("Level01Scene");
       if (level01 && level01.playBtn) {
         level01.playBtn.disableInteractive();
@@ -2219,7 +2219,7 @@ async function performSecureLogout() {
       
       // Return to SplashScene
       setTimeout(() => {
-        //window.game.scene.start("${window.BACKEND_URL}/Scenes/SplashScene.js");
+        //window.game.scene.start(`${window.BACKEND_URL}/Scenes/SplashScene.js`);
         window.game.scene.start("SplashScene"); // ✅ BENAR
         document.getElementById("loginBtn").disabled = false;
         console.log('🏠 Logout complete - Returned to SplashScene');
