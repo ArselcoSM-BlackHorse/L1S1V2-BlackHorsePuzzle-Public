@@ -523,7 +523,7 @@ window.checkPaymentStatusFromBackend = async function(email) {
     console.log('🔍 Checking payment status for:', email);
     //const encodedEmail = encodeURIComponent(email);
     const res = await axios.post(
-      `https://backend-paypalblackhorsepuzzle.onrender.com/api/${encodeURIComponent(email)}/payment-status`,
+      `${window.BACKEND_URL}/api/${encodeURIComponent(email)}/payment-status`,
       { }, // Send email in POST body
       {timeout: 200000}
     );
@@ -1058,10 +1058,26 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
     <!-- === End form login === style="margin-left:10px;" dikeluarkan dari Resend Code === -->
 
      <!-- Load main.js -->
+    <script src="./configURL.js"></script>  
     <script src="./Helper/hashHelper.js"></script>  
-    <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/SplashScene.js"></script>
+    <!-- <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/SplashScene.js"></script>
+    <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/CinematicScene.js"></script>
     <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level01Scene.js"></script>
-    <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level02Scene.js"></script>
+    <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level02Scene.js"></script> -->
+    <script>
+    // Inject scene scripts secara dinamis setelah configURL.js dimuat
+    const scenes = [
+      'SplashScene.js',
+      'CinematicScene.js',
+      'Level01Scene.js',
+      'Level02Scene.js'
+    ];
+    scenes.forEach(scene => {
+      const s = document.createElement('script');
+      s.src = window.BACKEND_URL + '/Scenes/' + scene;
+      document.head.appendChild(s);
+    });
+    </script>
     <script src="./main.js"></script>
     
   
@@ -1108,7 +1124,7 @@ window.addEventListener('beforeunload', () => {
     saveSource: 'beforeunload'
  };
   
-  const url = `https://backend-paypalblackhorsepuzzle.onrender.com/api/users/${encodeURIComponent(email)}/update-progress`;
+  const url = `${window.BACKEND_URL}/api/users/${encodeURIComponent(email)}/update-progress`;
   navigator.sendBeacon(url, JSON.stringify(progress));
   
   console.log('💾 Safe emergency save:', progress.level01Score);
@@ -1124,7 +1140,7 @@ document.addEventListener('visibilitychange', () => {
     // Jika ada timeElapsed yang valid, ambil dari scene, jika tidak, pakai 0
     let time = 0;
     if (window.game && window.game.scene && window.game.scene.getScene) {
-      //const level01 = window.game.scene.getScene("https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level01Scene.js");
+      //const level01 = window.game.scene.getScene("${window.BACKEND_URL}/Scenes/Level01Scene.js");
       const level01 = window.game.scene.getScene("Level01Scene");
       if (level01 && typeof level01.timeElapsed !== 'undefined') {
         time = level01.timeElapsed;
@@ -1397,7 +1413,7 @@ let paymentCheckInterval = null;
 async function registerUser(email) { 
     try {
   const response = await axios.post(
-    'https://backend-paypalblackhorsepuzzle.onrender.com/api/users/register',
+    `${window.BACKEND_URL}/api/users/register`,
     { email: email.toLowerCase().trim() },
     { timeout: 200000 }
   );
@@ -1478,7 +1494,7 @@ try {
 
   try {
     const response = await axios.post(
-      'https://backend-paypalblackhorsepuzzle.onrender.com/api/users/verify-email',
+      '${window.BACKEND_URL}/api/users/verify-email',
       { email, verificationCode: code },
       { timeout: 200000 }
     );
@@ -1495,7 +1511,7 @@ try {
       
       document.getElementById("verificationCodeInput").value = "";
       if (window.Phaser && window.game && window.game.scene) {
-        //window.game.scene.start("https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/SplashScene.js");
+        //window.game.scene.start("${window.BACKEND_URL}/Scenes/SplashScene.js");
         window.game.scene.start("SplashScene"); // ✅ BENAR
       }
       if (window.showSuccessNotification) {
@@ -1523,7 +1539,7 @@ console.log('Username yang dikirim:', this.username);
 async function checkEmailVerifiedFromBackend(email) {
   try {
     const response = await axios.post(
-      'https://backend-paypalblackhorsepuzzle.onrender.com/api/users/check-email',
+      '${window.BACKEND_URL}/api/users/check-email',
       { email: email},
       { timeout: 200000 }
     );
@@ -1554,7 +1570,7 @@ window.gameUtils = {
 window.resendVerificationEmail = async function(email) {
   try {
     const response = await axios.post(
-      'https://backend-paypalblackhorsepuzzle.onrender.com/api/users/resend-verification',
+      '${window.BACKEND_URL}/api/users/resend-verification',
       { email },
       { timeout: 200000 }
     );
@@ -1892,7 +1908,7 @@ window.addEventListener('DOMContentLoaded', async function() {
         
         
 if (window.Phaser && window.game && window.game.scene) {
-    //window.game.scene.start("https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/SplashScene.js"); //dari Level01Scene ganti ke SplashScene 
+    //window.game.scene.start("${window.BACKEND_URL}/Scenes/SplashScene.js"); //dari Level01Scene ganti ke SplashScene 
      window.game.scene.start("SplashScene"); // ✅ BENAR
     // Tambahkan kode ini untuk menyembunyikan level01Score:
       setTimeout(() => {
@@ -1943,7 +1959,7 @@ if (window.Phaser && window.game && window.game.scene) {
     if (window.Phaser && window.game && window.game.scene) {
       window.game.scene.scenes.forEach(scene => scene.scene.restart());
       
-      //const level01 = window.game.scene.getScene("https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level01Scene.js");
+      //const level01 = window.game.scene.getScene("${window.BACKEND_URL}/Scenes/Level01Scene.js");
       const level01 = window.game.scene.getScene("Level01Scene");
       if (level01 && level01.playBtn) {
         level01.playBtn.disableInteractive();
@@ -1958,7 +1974,7 @@ if (window.Phaser && window.game && window.game.scene) {
       
       setTimeout(() => {
         //if (window.Phaser && window.game && window.game.scene) {
-        //window.game.scene.start("https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/SplashScene.js");
+        //window.game.scene.start("${window.BACKEND_URL}/Scenes/SplashScene.js");
         window.game.scene.start("SplashScene"); // ✅ BENAR
       }, 1500);
     }
@@ -1997,7 +2013,7 @@ if (window.Phaser && window.game && window.game.scene) {
 async function createPayPalOrder(email, amount, message = 'Black Horse Puzzle Support') {
   try {
     const response = await axios.post(
-      'https://backend-paypalblackhorsepuzzle.onrender.com/api/create-order',
+      '${window.BACKEND_URL}/api/create-order',
       {
         email,
         amount,
@@ -2027,7 +2043,7 @@ async function createPayPalOrder(email, amount, message = 'Black Horse Puzzle Su
 async function capturePayPalOrder(paypalOrderId, email) {
   try {
     const response = await axios.post(
-      `https://backend-paypalblackhorsepuzzle.onrender.com/api/capture-order/${paypalOrderId}`,
+      `${window.BACKEND_URL}/api/capture-order/${paypalOrderId}`,
       { email },
       { timeout: 200000 }
     );
@@ -2039,7 +2055,7 @@ async function capturePayPalOrder(paypalOrderId, email) {
       //localStorage.setItem(`score_${email}`, "0");
       // Unlock fitur game jika scene aktif
       if (window.Level01Scene && typeof window.Level01Scene.prototype.unlockGameAfterPurchase === 'function') {
-        //const scene = window.game && window.game.scene && window.game.scene.getScene("https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level01Scene.js");
+        //const scene = window.game && window.game.scene && window.game.scene.getScene("${window.BACKEND_URL}/Scenes/Level01Scene.js");
         const scene = window.game && window.game.scene && window.game.scene.getScene("Level01Scene");
         if (scene && typeof scene.unlockGameAfterPurchase === 'function') {
           scene.unlockGameAfterPurchase();
@@ -2067,7 +2083,7 @@ async function verifyPayPalToken(token, payerID, email) {
 
     // Axios tidak mendukung AbortController langsung, jadi timeout pakai config
     const response = await axios.post(
-      'https://backend-paypalblackhorsepuzzle.onrender.com/api/verify-paypal-token',
+      '${window.BACKEND_URL}/api/verify-paypal-token',
       { token, payerID, email },
       { timeout: 200000 } // timeout dalam ms
     );
@@ -2097,7 +2113,7 @@ async function verifyPayPalOrder(orderId, email) {
 
     // Axios timeout pakai config
     const response = await axios.post(
-      'https://backend-paypalblackhorsepuzzle.onrender.com/api/verify-paypal',
+      '${window.BACKEND_URL}/api/verify-paypal',
       {paypalOrderId: orderId, email },
       { timeout: 200000 }
     );
@@ -2190,7 +2206,7 @@ async function performSecureLogout() {
       });
       
       // Disable play button
-      //const level01 = window.game.scene.getScene("https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level01Scene.js");
+      //const level01 = window.game.scene.getScene("${window.BACKEND_URL}/Scenes/Level01Scene.js");
       const level01 = window.game.scene.getScene("Level01Scene");
       if (level01 && level01.playBtn) {
         level01.playBtn.disableInteractive();
@@ -2203,7 +2219,7 @@ async function performSecureLogout() {
       
       // Return to SplashScene
       setTimeout(() => {
-        //window.game.scene.start("https://backend-paypalblackhorsepuzzle.onrender.com/Scenes/SplashScene.js");
+        //window.game.scene.start("${window.BACKEND_URL}/Scenes/SplashScene.js");
         window.game.scene.start("SplashScene"); // ✅ BENAR
         document.getElementById("loginBtn").disabled = false;
         console.log('🏠 Logout complete - Returned to SplashScene');

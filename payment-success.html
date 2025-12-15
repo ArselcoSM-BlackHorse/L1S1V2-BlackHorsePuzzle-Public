@@ -60,7 +60,7 @@
     window.location.href = "/index.html";
   } else {
    // Verifikasi pembayaran ke backend 
-  axios.post('https://backend-paypalblackhorsepuzzle.onrender.com/api/verify-paypal-token', {
+  axios.post('${window.BACKEND_URL}/api/verify-paypal-token', {
     token,
     payerID,
     email
@@ -97,7 +97,7 @@ window.checkPaymentStatusFromBackend = async function(email) {
     console.log('🔍 Checking payment status for:', email);
     
     const res = await axios.post(
-      `https://backend-paypalblackhorsepuzzle.onrender.com/api/payments/${encodeURIComponent(email)}/payment-status`,
+      `${window.BACKEND_URL}/api/payments/${encodeURIComponent(email)}/payment-status`,
       {},
       { timeout: 200000 }
     );
@@ -150,7 +150,7 @@ window.checkPaymentStatusFromBackend = async function(email) {
 
 
 // ** VERIFY-PAYMENT**
-axios.get('https://backend-paypalblackhorsepuzzle.onrender.com/api/verify-payment', {
+axios.get('${window.BACKEND_URL}/api/verify-payment', {
       params: { txnId, email },
       timeout: 200000,
       headers: { 'Accept': 'application/json' }
@@ -186,7 +186,7 @@ axios.get('https://backend-paypalblackhorsepuzzle.onrender.com/api/verify-paymen
       });
 
 // **VERIFIKASI ORDER PAYPAL DARI FRONTEND**
-axios.post('https://backend-paypalblackhorsepuzzle.onrender.com/api/verify-paypal', {
+axios.post('${window.BACKEND_URL}/api/verify-paypal', {
   paypalOrderId,
   email
 }, { timeout: 200000 })
@@ -210,7 +210,7 @@ axios.post('https://backend-paypalblackhorsepuzzle.onrender.com/api/verify-paypa
 // **CEK STATUS PEMBAYARAN SUKSES**
 async function handlePaymentSuccess(email) {
   try {
-    const res = await axios.get(`https://backend-paypalblackhorsepuzzle.onrender.com/api/payment-status/${email}`);
+    const res = await axios.get(`${window.BACKEND_URL}/api/payment-status/${email}`);
     const data = res.data;
 
     if (data && data.paid === true) {
@@ -247,7 +247,7 @@ async function handlePaymentSuccess(email) {
 
     // Axios timeout pakai config
     const response = await axios.post(
-      'https://backend-paypalblackhorsepuzzle.onrender.com/api/verify-paypal',
+      '${window.BACKEND_URL}/api/verify-paypal',
       { paypalOrderId, email },
       { timeout: 200000 }
     );

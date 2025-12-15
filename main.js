@@ -1,6 +1,5 @@
 // main.js (Non-module version with CDN)
 
-
 // Tambahkan ke window.helpText di main.js
 window.helpText1 = Object.assign(window.helpText1 || {}, {
   zh: {
@@ -129,8 +128,7 @@ window.onload = function () {
      height: 1280,
      backgroundColor: "#181c24", // 🌟 warna latar belakang kebiruan
      parent: 'game-container', // opsional
-    
-    
+  
      scale: {
       mode: Phaser.Scale.FIT, // 🌟 agar responsive
       autoCenter: Phaser.Scale.CENTER_BOTH, // 🌟 agar muncul di tengah
@@ -139,16 +137,16 @@ window.onload = function () {
     },
 
     pixelArt: true, // 🌟 agar grafik tetap tajam saat diskalakan
-    scene: [SplashScene, Level01Scene, Level02Scene],
+    scene: [SplashScene, CinematicScene,Level01Scene, Level02Scene],
     physics: {
     default: 'arcade',
     arcade: {
       debug: false
    }
   }
-};
-const game = new Phaser.Game(config);
-window.game = game;
+ };
+ const game = new Phaser.Game(config);
+ window.game = game;
 };
 
 
