@@ -61,6 +61,20 @@
         console.log('✅ Samsung device detected: body.samsung applied');
       }
     });   
+    
+    // === LOGIN UI SYNC ===
+    document.addEventListener('DOMContentLoaded', function() {
+      const email = localStorage.getItem("email");
+      const loginBox = document.getElementById("loginBox");
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (email) {
+        loginBox.classList.add("hidden");
+        logoutBtn.style.display = "inline-block";
+      } else {
+        loginBox.classList.remove("hidden");
+        logoutBtn.style.display = "none";
+      }
+    });
     </script>
   
     <style>
