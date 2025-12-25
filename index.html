@@ -61,7 +61,7 @@
         console.log('✅ Samsung device detected: body.samsung applied');
       }
     });   
-    
+
     // === LOGIN UI SYNC ===
     document.addEventListener('DOMContentLoaded', function() {
       const email = localStorage.getItem("email");
@@ -1145,7 +1145,33 @@ window.addEventListener('beforeunload', () => {
   console.log('💾 Safe emergency save:', progress.level01Score);
 });
 
- 
+// Tambahkan di index.html, sebelum dipakai
+window.syncProgressFromBackend = async function(email) {
+  try {
+    // Contoh: ambil progress dari backend
+    const res = await axios.post(
+      `${window.BACKEND_URL}/api/users/${encodeURIComponent(email)}/sync-progress`,
+      {},
+      { timeout: 200000 }
+    );
+    const data = res.data;
+    // Simpan ke localStorage jika perlu
+    if (data && data.success && data.progress) {
+      localStorage.setItem(`gameData-${email}`, JSON.stringify({
+        gameProgress: data.progress,
+        lastSyncFromBackend: new Date().toISOString(),
+        backendSyncSuccess: true
+      }));
+      return { success: true, progress: data.progress };
+    } else {
+      return { success: false };
+    }
+  } catch (err) {
+    console.error('❌ syncProgressFromBackend error:', err);
+    return { success: false, error: err };
+  }
+};
+
 //=================================== BATAS SENDBEACON ====================================
 
 document.addEventListener('visibilitychange', () => {
