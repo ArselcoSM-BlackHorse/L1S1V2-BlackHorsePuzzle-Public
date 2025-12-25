@@ -1150,7 +1150,7 @@ window.syncProgressFromBackend = async function(email) {
   try {
     // Contoh: ambil progress dari backend
     const res = await axios.post(
-      `${window.BACKEND_URL}/api/users/${encodeURIComponent(email)}/sync-progress`,
+      `${window.BACKEND_URL}/api/users/${encodeURIComponent(email)}/progress`,
       {},
       { timeout: 200000 }
     );
