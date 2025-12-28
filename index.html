@@ -1208,7 +1208,7 @@ try {
     console.log(`🔄 Initializing user data for: ${email}`);
     
     // ✅ 1. SELALU AMBIL DATA TERBARU DARI BACKEND DULU
-    const progressRes = await this.getUserProgress(email);
+    const progressRes = await window.getUserProgress(email);
     
     if (progressRes && progressRes.success && progressRes.progress) {
       // ✅ 2. UPDATE SEMUA INSTANCE PROPERTIES DARI BACKEND
