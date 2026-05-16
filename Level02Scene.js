@@ -1249,13 +1249,23 @@ class Level02Scene extends Phaser.Scene {
       if (!currentEmail) return;
       const userData = JSON.parse(localStorage.getItem(`gameData-${currentEmail}`)) || {};
       const gameProgress = userData.gameProgress || {};
+      const persistedSelectedSeries = (this.selectedSeries === 1 || this.selectedSeries === 2)
+        ? this.selectedSeries
+        : ((Number(gameProgress.selectedSeries) === 1 || Number(gameProgress.selectedSeries) === 2)
+          ? Number(gameProgress.selectedSeries)
+          : null);
+      const persistedSilverStarAlpha = (typeof this.starSilverAlpha === 'number')
+        ? this.starSilverAlpha
+        : (typeof gameProgress.starSilverBlackHorseAlpha === 'number' ? gameProgress.starSilverBlackHorseAlpha : 0);
       window.updateUserProgress(currentEmail, {
         level01Completed: true,
         level01Score: this.level01Score,
         level01HighScore: Math.max(this.level01Score, this.level01HighScore || 0, gameProgress.level01HighScore || 0),
         totalPlays: Math.max(this.totalPlays || 0, gameProgress.totalPlays || 0),
         round: this.round,
+        selectedSeries: persistedSelectedSeries,
         starBronzeAlpha: this.starBronzeAlpha,
+        starSilverBlackHorseAlpha: persistedSilverStarAlpha,
         starAwarded: this.starAwarded,
         claimedCandyCapacity: this.claimedCandyCapacity || gameProgress.claimedCandyCapacity || 0,
         scoreCandy: this.scoreCandy || gameProgress.scoreCandy || 0,
@@ -1267,6 +1277,11 @@ class Level02Scene extends Phaser.Scene {
         perfectGames: true,
         totalAttempts: Math.max(this.totalAttempts || 0, gameProgress.totalAttempts || 0)
       });
+      userData.gameProgress = userData.gameProgress || {};
+      userData.gameProgress.selectedSeries = persistedSelectedSeries;
+      userData.gameProgress.starSilverBlackHorseAlpha = persistedSilverStarAlpha;
+      userData.gameProgress.lastSaved = new Date().toISOString();
+      localStorage.setItem(`gameData-${currentEmail}`, JSON.stringify(userData));
     }, 5000);
 
     console.log('🔄 Auto-save setup completed for:', email);
