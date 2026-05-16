@@ -24,14 +24,17 @@ class Level02Scene extends Phaser.Scene {
     try {
       const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
       const gp = userData.gameProgress || {};
+      if (Number(gp.selectedSeries) === 1 || Number(gp.selectedSeries) === 2) this.selectedSeries = Number(gp.selectedSeries);
       if (typeof gp.round === 'number' && gp.round >= 1) this.round = gp.round;
       if (typeof gp.starBronzeAlpha === 'number') this.starBronzeAlpha = gp.starBronzeAlpha;
       if (typeof gp.starSilverBlackHorseAlpha === 'number') this.starSilverAlpha = gp.starSilverBlackHorseAlpha;
       if (typeof gp.level01Score === 'number') this.level01Score = gp.level01Score;
+      this.registry.set('selectedSeries', this.selectedSeries ?? null);
       this.registry.set('round', this.round || 1);
       this.registry.set('starBronzeAlpha', this.starBronzeAlpha || 0);
+      this.registry.set('starSilverBlackHorseAlpha', this.starSilverAlpha || 0);
       this.registry.set('level01Score', this.level01Score || 0);
-      console.log('🗂️ Early restore from cache:', { round: this.round, starBronzeAlpha: this.starBronzeAlpha, score: this.level01Score });
+      console.log('🗂️ Early restore from cache:', { selectedSeries: this.selectedSeries, round: this.round, starBronzeAlpha: this.starBronzeAlpha, starSilverBlackHorseAlpha: this.starSilverAlpha, score: this.level01Score });
     } catch (_) {
       // ignore
     }
@@ -42,6 +45,7 @@ class Level02Scene extends Phaser.Scene {
     if (!emailSnap) return;
     const ud = JSON.parse(localStorage.getItem(`gameData-${emailSnap}`)) || {};
     ud.gameProgress = ud.gameProgress || {};
+    ud.gameProgress.selectedSeries = (this.selectedSeries === 1 || this.selectedSeries === 2) ? this.selectedSeries : (ud.gameProgress.selectedSeries ?? null);
     ud.gameProgress.round = this.round ?? 1;
     ud.gameProgress.starBronzeAlpha = this.starBronzeAlpha ?? 0;
     ud.gameProgress.starSilverBlackHorseAlpha = this.starSilverAlpha ?? (ud.gameProgress.starSilverBlackHorseAlpha ?? 0);
@@ -96,6 +100,20 @@ class Level02Scene extends Phaser.Scene {
       this.scene.start('SplashScene');
       return;
     }
+
+    this.restoreProgressFromCacheEarly(email);
+
+    if (Number(data.selectedSeries) === 1 || Number(data.selectedSeries) === 2) {
+      this.selectedSeries = Number(data.selectedSeries);
+    }
+    if (typeof data.starSilverBlackHorseAlpha === 'number') {
+      this.starSilverAlpha = data.starSilverBlackHorseAlpha;
+    }
+    if (typeof data.starAwarded === 'boolean') {
+      this.starAwarded = data.starAwarded;
+    }
+    this.registry.set('selectedSeries', this.selectedSeries ?? null);
+    this.registry.set('starSilverBlackHorseAlpha', this.starSilverAlpha || 0);
 
     if (data.preserveScore && typeof data.level01Score === 'number') {
       this.level01Score = data.level01Score;
@@ -256,6 +274,8 @@ class Level02Scene extends Phaser.Scene {
         level01Score: this.registry.get('level01Score') ?? this.level01Score ?? 0,
         round: this.registry.get('round') ?? this.round ?? 1,
         starBronzeAlpha: this.registry.get('starBronzeAlpha') ?? this.starBronzeAlpha ?? 0,
+        starSilverBlackHorseAlpha: this.registry.get('starSilverBlackHorseAlpha') ?? this.starSilverAlpha ?? 0,
+        selectedSeries: this.registry.get('selectedSeries') ?? this.selectedSeries ?? null,
         starAwarded: this.registry.get('starAwarded') ?? this.starAwarded ?? false,
         returnFromLevel02: true
       });
@@ -290,8 +310,24 @@ class Level02Scene extends Phaser.Scene {
 
   startLevel01Scene(data = {}) {
     if (!this.isSceneUsable()) return;
+    const mergedData = {
+      ...data,
+      selectedSeries: (Number(data.selectedSeries) === 1 || Number(data.selectedSeries) === 2)
+        ? Number(data.selectedSeries)
+        : ((this.selectedSeries === 1 || this.selectedSeries === 2)
+          ? this.selectedSeries
+          : ((Number(this.registry.get('selectedSeries')) === 1 || Number(this.registry.get('selectedSeries')) === 2)
+            ? Number(this.registry.get('selectedSeries'))
+            : null)),
+      starSilverBlackHorseAlpha: typeof data.starSilverBlackHorseAlpha === 'number'
+        ? data.starSilverBlackHorseAlpha
+        : (this.registry.get('starSilverBlackHorseAlpha') ?? this.starSilverAlpha ?? 0),
+      starAwarded: typeof data.starAwarded === 'boolean'
+        ? data.starAwarded
+        : (this.registry.get('starAwarded') ?? this.starAwarded ?? false)
+    };
     this.cleanupBeforeTransition();
-    this.scene.start('Level01Scene', data);
+    this.scene.start('Level01Scene', mergedData);
   }
 
   async initializeUserData(email) {
@@ -346,6 +382,11 @@ class Level02Scene extends Phaser.Scene {
     this.startLevel01Scene({
       preserveScore: true,
       level01Score: this.level01Score,
+      round: this.registry.get('round') ?? this.round ?? 1,
+      starBronzeAlpha: this.registry.get('starBronzeAlpha') ?? this.starBronzeAlpha ?? 0,
+      starSilverBlackHorseAlpha: this.registry.get('starSilverBlackHorseAlpha') ?? this.starSilverAlpha ?? 0,
+      selectedSeries: this.registry.get('selectedSeries') ?? this.selectedSeries ?? null,
+      starAwarded: this.registry.get('starAwarded') ?? this.starAwarded ?? false,
       preserveGameOver: currentData.preserveGameOver || false,
       returnFromLevel02: true
     });
@@ -356,7 +397,12 @@ class Level02Scene extends Phaser.Scene {
     this._isTransitioning = true;
     this.startLevel01Scene({
       preserveScore: true,
-      level01Score: this.level01Score || window.level01Score || 0
+      level01Score: this.level01Score || window.level01Score || 0,
+      round: this.registry.get('round') ?? this.round ?? 1,
+      starBronzeAlpha: this.registry.get('starBronzeAlpha') ?? this.starBronzeAlpha ?? 0,
+      starSilverBlackHorseAlpha: this.registry.get('starSilverBlackHorseAlpha') ?? this.starSilverAlpha ?? 0,
+      selectedSeries: this.registry.get('selectedSeries') ?? this.selectedSeries ?? null,
+      starAwarded: this.registry.get('starAwarded') ?? this.starAwarded ?? false
     });
   }
 
