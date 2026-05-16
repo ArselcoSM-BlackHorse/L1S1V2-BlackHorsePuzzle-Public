@@ -862,13 +862,21 @@ class Level02Scene extends Phaser.Scene {
     this.scoreCandy = Number(this.scoreCandy ?? cachedScoreCandy) || 0;
     this.buyCandy = Number(this.buyCandy ?? cachedBuyCandy) || 0;
     this.candyCount = Number(this.candyCount ?? (this.scoreCandy + this.buyCandy) ?? cachedCandyCount) || 0;
+    const persistedSelectedSeries = (this.selectedSeries === 1 || this.selectedSeries === 2)
+      ? this.selectedSeries
+      : ((Number(gameProgress.selectedSeries) === 1 || Number(gameProgress.selectedSeries) === 2)
+        ? Number(gameProgress.selectedSeries)
+        : null);
+    const persistedSilverStarAlpha = (typeof this.starSilverAlpha === 'number')
+      ? this.starSilverAlpha
+      : (typeof gameProgress.starSilverBlackHorseAlpha === 'number' ? gameProgress.starSilverBlackHorseAlpha : 0);
 
     const lastSaved = new Date().toISOString();
 
     try {
       window.level01Score = this.level01Score;
       window.starBronzeAlpha = this.starBronzeAlpha;
-      window.starSilverAlpha = this.starSilverAlpha || 0;
+      window.starSilverAlpha = persistedSilverStarAlpha;
       window.starAwarded = this.starAwarded;
       window.starBronzeBlackHorseAlpha = this.starBronzeBlackHorseAlpha || 0;
       window.round = this.round;
@@ -879,8 +887,9 @@ class Level02Scene extends Phaser.Scene {
         level01HighScore: Math.max(this.level01Score, this.level01HighScore || 0, cachedHighScore),
         totalPlays: Math.max(this.totalPlays || 0, cachedTotalPlays),
         round: this.round || 1,
+        selectedSeries: persistedSelectedSeries,
         starBronzeAlpha: this.starBronzeAlpha,
-        starSilverBlackHorseAlpha: this.starSilverAlpha || 0,
+        starSilverBlackHorseAlpha: persistedSilverStarAlpha,
         starAwarded: this.starAwarded,
         claimedCandyCapacity: this.claimedCandyCapacity,
         scoreCandy: this.scoreCandy,
@@ -902,8 +911,9 @@ class Level02Scene extends Phaser.Scene {
       userData.gameProgress.level01HighScore = Math.max(this.level01Score, this.level01HighScore || 0, cachedHighScore);
       userData.gameProgress.totalPlays = Math.max(this.totalPlays || 0, cachedTotalPlays);
       userData.gameProgress.round = this.round || 1;
+      userData.gameProgress.selectedSeries = persistedSelectedSeries;
       userData.gameProgress.starBronzeAlpha = this.starBronzeAlpha || 0;
-      userData.gameProgress.starSilverBlackHorseAlpha = this.starSilverAlpha || userData.gameProgress.starSilverBlackHorseAlpha || 0;
+      userData.gameProgress.starSilverBlackHorseAlpha = persistedSilverStarAlpha;
       userData.gameProgress.starAwarded = this.starAwarded || false;
       userData.gameProgress.starBronzeBlackHorseAlpha = this.starBronzeBlackHorseAlpha || 0;
       userData.gameProgress.claimedCandyCapacity = this.claimedCandyCapacity || 0;
@@ -923,7 +933,9 @@ class Level02Scene extends Phaser.Scene {
       userData.gameProgress.level01HighScore = Math.max(this.level01Score, this.level01HighScore || 0, cachedHighScore);
       userData.gameProgress.totalPlays = Math.max(this.totalPlays || 0, cachedTotalPlays);
       userData.gameProgress.round = this.round || 1;
+      userData.gameProgress.selectedSeries = persistedSelectedSeries;
       userData.gameProgress.starBronzeAlpha = this.starBronzeAlpha || 0;
+      userData.gameProgress.starSilverBlackHorseAlpha = persistedSilverStarAlpha;
       userData.gameProgress.starAwarded = this.starAwarded || false;
       userData.gameProgress.starBronzeBlackHorseAlpha = this.starBronzeBlackHorseAlpha || 0;
       userData.gameProgress.claimedCandyCapacity = this.claimedCandyCapacity || 0;
@@ -991,8 +1003,21 @@ class Level02Scene extends Phaser.Scene {
           return fallbackValue === true;
         };
 
+      const pickLatestSelectedSeries = (fallbackValue = null) => {
+        const latestValue = Number(latestProgress?.selectedSeries);
+        if (latestValue === 1 || latestValue === 2) return latestValue;
+
+        const fallbackCandidate = Number(fallbackProgress?.selectedSeries);
+        if (fallbackCandidate === 1 || fallbackCandidate === 2) return fallbackCandidate;
+
+        const ownValue = Number(fallbackValue);
+        return ownValue === 1 || ownValue === 2 ? ownValue : null;
+      };
+
         this.level01Score = pickLatestNumber('level01Score', this.level01Score ?? window.level01Score ?? 0);
+      this.selectedSeries = pickLatestSelectedSeries(this.selectedSeries ?? this.registry.get('selectedSeries'));
         this.starBronzeAlpha = pickLatestNumber('starBronzeAlpha', this.starBronzeAlpha ?? 0);
+      this.starSilverAlpha = pickLatestNumber('starSilverBlackHorseAlpha', this.starSilverAlpha ?? window.starSilverAlpha ?? 0);
         this.starAwarded = pickLatestBoolean('starAwarded', this.starAwarded === true);
         this.starBronzeBlackHorseAlpha = pickLatestNumber('starBronzeBlackHorseAlpha', this.starBronzeBlackHorseAlpha ?? 0);
         this.round = Math.max(1, pickLatestNumber('round', this.round ?? window.round ?? 1));
@@ -1026,6 +1051,7 @@ class Level02Scene extends Phaser.Scene {
 
         window.level01Score = this.level01Score;
         window.starBronzeAlpha = this.starBronzeAlpha;
+        window.starSilverAlpha = this.starSilverAlpha;
         window.starAwarded = this.starAwarded;
         window.starBronzeBlackHorseAlpha = this.starBronzeBlackHorseAlpha || 0;
         window.round = this.round;
@@ -1044,7 +1070,9 @@ class Level02Scene extends Phaser.Scene {
           level01HighScore: this.level01HighScore,
           totalPlays: this.totalPlays,
           round: this.round,
+          selectedSeries: this.selectedSeries,
           starBronzeAlpha: this.starBronzeAlpha,
+          starSilverBlackHorseAlpha: this.starSilverAlpha,
           starAwarded: this.starAwarded,
           starBronzeBlackHorseAlpha: this.starBronzeBlackHorseAlpha,
           claimedCandyCapacity: this.claimedCandyCapacity,
@@ -1075,6 +1103,8 @@ class Level02Scene extends Phaser.Scene {
 
         console.log('✅ User data initialized from backend:', {
           level01Score: this.level01Score,
+          selectedSeries: this.selectedSeries,
+          starSilverBlackHorseAlpha: this.starSilverAlpha,
           totalPlays: this.totalPlays,
           newUser: this.newUser,
           winUser: this.winUser,
@@ -1104,6 +1134,9 @@ class Level02Scene extends Phaser.Scene {
 
       if (fallbackUserData.gameProgress) {
         this.level01Score = fallbackUserData.gameProgress.level01Score || 0;
+        this.selectedSeries = (Number(fallbackUserData.gameProgress.selectedSeries) === 1 || Number(fallbackUserData.gameProgress.selectedSeries) === 2)
+          ? Number(fallbackUserData.gameProgress.selectedSeries)
+          : this.selectedSeries;
         this.starBronzeAlpha = fallbackUserData.gameProgress.starBronzeAlpha || 0;
         this.starSilverAlpha = fallbackUserData.gameProgress.starSilverBlackHorseAlpha || 0;
         this.starAwarded = fallbackUserData.gameProgress.starAwarded || 0;
@@ -1154,6 +1187,7 @@ class Level02Scene extends Phaser.Scene {
             level01BestTime: 0,
             level01Attempts: 0,
             round: this.round,
+            selectedSeries: this.selectedSeries ?? null,
             totalPlays: 0,
             bestTime: 0,
             averageTime: 0,
