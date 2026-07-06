@@ -1075,26 +1075,52 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
      <!-- Load main.js -->
     <!-- <script src="./configURL.js"></script> pindah keatas-->
     <script src="./Helper/hashHelper.js"></script> 
-    <script src="./GameLoad.js"></script> 
-    <script src="./CinematicScene.js"></script>
-    <script src="./Level02Scene.js"></script>
-    <!-- <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/SplashScene.js"></script>
-    <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/CinematicScene.js"></script>
-    <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level01Scene.js"></script>
-    <script src="https://L1S1V2-backend-paypalblackhorsepuzzle.onrender.com/Scenes/Level02Scene.js"></script> -->
     <script>
-    // Inject scene scripts secara dinamis setelah configURL.js dimuat
-    const scenes = [
-      'SplashScene.js',
-      'Level01Scene.js'
-    ];
-    scenes.forEach(scene => {
-      const s = document.createElement('script');
-      s.src = window.BACKEND_URL + '/Scenes/' + scene;
-      document.head.appendChild(s);
+    const loadScriptWithFallback = (sources) => new Promise((resolve, reject) => {
+      let index = 0;
+
+      const tryNext = () => {
+        if (index >= sources.length) {
+          reject(new Error(`Failed to load script from: ${sources.join(', ')}`));
+          return;
+        }
+
+        const source = sources[index++];
+        const script = document.createElement('script');
+        script.src = source;
+        script.async = false;
+
+        script.onload = () => resolve(source);
+        script.onerror = () => {
+          script.remove();
+          tryNext();
+        };
+
+        document.head.appendChild(script);
+      };
+
+      tryNext();
     });
+
+    const sceneScriptSources = [
+      ['./Scenes/GameLoad.js'],
+      ['./Scenes/CinematicScene.js'],
+      ['./Scenes/Level02Scene.js'],
+      ['./Scenes/SplashScene.js'],
+      [`${window.BACKEND_URL}/Scenes/Level01Scene.js`]
+    ];
+
+    (async () => {
+      try {
+        for (const sources of sceneScriptSources) {
+          await loadScriptWithFallback(sources);
+        }
+        await loadScriptWithFallback(['./main.js']);
+      } catch (error) {
+        console.error('❌ Scene script loader failed:', error);
+      }
+    })();
     </script>
-    <script src="./main.js"></script>
     
   
    <script>

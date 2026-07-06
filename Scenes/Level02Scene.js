@@ -10,6 +10,17 @@ class Level02Scene extends Phaser.Scene {
     this._isTransitioning = false;
     this._escKeyHandler = null;
     this.SCORE_DIGITS = 6;
+    this.series2ScorePeak = 0;
+    this.series2PenaltyFloor = 0;
+    this.series2PenaltyLastScore = 0;
+    this.series2PenaltyConsecutiveDrop = 0;
+    this.series2PenaltyTotalAccumulatedDrop = 0;
+    this.series2PenaltyStage = 'normal';
+    this.series2PenaltyRecoveryStage = 'none';
+    this.series2Blocked = false;
+    this.series2BlockCount = 0;
+    this.series2BlockedNeedCandy = 0;
+    this.series2bhimbieUnlocked = false;
   }
 
   formatScore(v) {
@@ -29,6 +40,7 @@ class Level02Scene extends Phaser.Scene {
       if (typeof gp.starBronzeAlpha === 'number') this.starBronzeAlpha = gp.starBronzeAlpha;
       if (typeof gp.starSilverBlackHorseAlpha === 'number') this.starSilverAlpha = gp.starSilverBlackHorseAlpha;
       if (typeof gp.level01Score === 'number') this.level01Score = gp.level01Score;
+      this.applyPersistedSeries2State(gp);
       this.registry.set('selectedSeries', this.selectedSeries ?? null);
       this.registry.set('round', this.round || 1);
       this.registry.set('starBronzeAlpha', this.starBronzeAlpha || 0);
@@ -38,6 +50,50 @@ class Level02Scene extends Phaser.Scene {
     } catch (_) {
       // ignore
     }
+  }
+
+  getPersistedSeries2State(source = {}) {
+    const recoveryStage = String(source.series2PenaltyRecoveryStage ?? this.series2PenaltyRecoveryStage ?? 'none');
+    return {
+      series2ScorePeak: Math.max(0, Number(source.series2ScorePeak ?? this.series2ScorePeak) || 0),
+      series2PenaltyFloor: Math.max(0, Number(source.series2PenaltyFloor ?? this.series2PenaltyFloor) || 0),
+      series2PenaltyLastScore: Math.max(0, Number(source.series2PenaltyLastScore ?? this.series2PenaltyLastScore) || 0),
+      series2PenaltyConsecutiveDrop: Math.max(0, Number(source.series2PenaltyConsecutiveDrop ?? this.series2PenaltyConsecutiveDrop) || 0),
+      series2PenaltyTotalAccumulatedDrop: Math.max(0, Number(source.series2PenaltyTotalAccumulatedDrop ?? this.series2PenaltyTotalAccumulatedDrop) || 0),
+      series2PenaltyStage: String(source.series2PenaltyStage ?? this.series2PenaltyStage ?? 'normal'),
+      series2PenaltyRecoveryStage: ['true', 'false', 'null', 'undefined', ''].includes(recoveryStage) ? 'none' : recoveryStage,
+      series2Blocked: source.series2Blocked ?? this.series2Blocked ?? false,
+      series2BlockCount: Math.max(0, Number(source.series2BlockCount ?? this.series2BlockCount) || 0),
+      series2BlockedNeedCandy: Math.max(0, Number(source.series2BlockedNeedCandy ?? this.series2BlockedNeedCandy) || 0),
+      series2bhimbieUnlocked: source.series2bhimbieUnlocked ?? this.series2bhimbieUnlocked ?? false
+    };
+  }
+
+  applyPersistedSeries2State(source = {}) {
+    const snapshot = this.getPersistedSeries2State(source);
+    this.series2ScorePeak = snapshot.series2ScorePeak;
+    this.series2PenaltyFloor = snapshot.series2PenaltyFloor;
+    this.series2PenaltyLastScore = snapshot.series2PenaltyLastScore;
+    this.series2PenaltyConsecutiveDrop = snapshot.series2PenaltyConsecutiveDrop;
+    this.series2PenaltyTotalAccumulatedDrop = snapshot.series2PenaltyTotalAccumulatedDrop;
+    this.series2PenaltyStage = snapshot.series2PenaltyStage;
+    this.series2PenaltyRecoveryStage = snapshot.series2PenaltyRecoveryStage;
+    this.series2Blocked = snapshot.series2Blocked === true;
+    this.series2BlockCount = snapshot.series2BlockCount;
+    this.series2BlockedNeedCandy = snapshot.series2BlockedNeedCandy;
+    this.series2bhimbieUnlocked = snapshot.series2bhimbieUnlocked === true;
+
+    this.registry.set('series2ScorePeak', this.series2ScorePeak);
+    this.registry.set('series2PenaltyFloor', this.series2PenaltyFloor);
+    this.registry.set('series2PenaltyLastScore', this.series2PenaltyLastScore);
+    this.registry.set('series2PenaltyConsecutiveDrop', this.series2PenaltyConsecutiveDrop);
+    this.registry.set('series2PenaltyTotalAccumulatedDrop', this.series2PenaltyTotalAccumulatedDrop);
+    this.registry.set('series2PenaltyStage', this.series2PenaltyStage);
+    this.registry.set('series2PenaltyRecoveryStage', this.series2PenaltyRecoveryStage);
+    this.registry.set('series2Blocked', this.series2Blocked === true);
+    this.registry.set('series2BlockCount', this.series2BlockCount);
+    this.registry.set('series2BlockedNeedCandy', this.series2BlockedNeedCandy);
+    this.registry.set('series2bhimbieUnlocked', this.series2bhimbieUnlocked === true);
   }
 
   saveRoundStarToCache() {
@@ -50,6 +106,7 @@ class Level02Scene extends Phaser.Scene {
     ud.gameProgress.starBronzeAlpha = this.starBronzeAlpha ?? 0;
     ud.gameProgress.starSilverBlackHorseAlpha = this.starSilverAlpha ?? (ud.gameProgress.starSilverBlackHorseAlpha ?? 0);
     ud.gameProgress.level01Score = this.level01Score ?? 0;
+    Object.assign(ud.gameProgress, this.getPersistedSeries2State(ud.gameProgress));
     ud.gameProgress.lastSaved = new Date().toISOString();
     localStorage.setItem(`gameData-${emailSnap}`, JSON.stringify(ud));
   }
@@ -112,6 +169,7 @@ class Level02Scene extends Phaser.Scene {
     if (typeof data.starAwarded === 'boolean') {
       this.starAwarded = data.starAwarded;
     }
+    this.applyPersistedSeries2State(data);
     this.registry.set('selectedSeries', this.selectedSeries ?? null);
     this.registry.set('starSilverBlackHorseAlpha', this.starSilverAlpha || 0);
 
@@ -249,6 +307,7 @@ class Level02Scene extends Phaser.Scene {
           level01Score: this.level01Score,
           starBronzeAlpha: this.starBronzeAlpha,
           round: this.round,
+          ...this.getPersistedSeries2State(),
           returnFromLevel02: true
         });
         return;
@@ -277,6 +336,7 @@ class Level02Scene extends Phaser.Scene {
         starSilverBlackHorseAlpha: this.registry.get('starSilverBlackHorseAlpha') ?? this.starSilverAlpha ?? 0,
         selectedSeries: this.registry.get('selectedSeries') ?? this.selectedSeries ?? null,
         starAwarded: this.registry.get('starAwarded') ?? this.starAwarded ?? false,
+        ...this.getPersistedSeries2State(),
         returnFromLevel02: true
       });
     });
@@ -324,7 +384,20 @@ class Level02Scene extends Phaser.Scene {
         : (this.registry.get('starSilverBlackHorseAlpha') ?? this.starSilverAlpha ?? 0),
       starAwarded: typeof data.starAwarded === 'boolean'
         ? data.starAwarded
-        : (this.registry.get('starAwarded') ?? this.starAwarded ?? false)
+        : (this.registry.get('starAwarded') ?? this.starAwarded ?? false),
+      ...this.getPersistedSeries2State({
+        series2ScorePeak: data.series2ScorePeak ?? this.registry.get('series2ScorePeak'),
+        series2PenaltyFloor: data.series2PenaltyFloor ?? this.registry.get('series2PenaltyFloor'),
+        series2PenaltyLastScore: data.series2PenaltyLastScore ?? this.registry.get('series2PenaltyLastScore'),
+        series2PenaltyConsecutiveDrop: data.series2PenaltyConsecutiveDrop ?? this.registry.get('series2PenaltyConsecutiveDrop'),
+        series2PenaltyTotalAccumulatedDrop: data.series2PenaltyTotalAccumulatedDrop ?? this.registry.get('series2PenaltyTotalAccumulatedDrop'),
+        series2PenaltyStage: data.series2PenaltyStage ?? this.registry.get('series2PenaltyStage'),
+        series2PenaltyRecoveryStage: data.series2PenaltyRecoveryStage ?? this.registry.get('series2PenaltyRecoveryStage'),
+        series2Blocked: data.series2Blocked ?? this.registry.get('series2Blocked'),
+        series2BlockCount: data.series2BlockCount ?? this.registry.get('series2BlockCount'),
+        series2BlockedNeedCandy: data.series2BlockedNeedCandy ?? this.registry.get('series2BlockedNeedCandy'),
+        series2bhimbieUnlocked: data.series2bhimbieUnlocked ?? this.registry.get('series2bhimbieUnlocked')
+      })
     };
     this.cleanupBeforeTransition();
     this.scene.start('Level01Scene', mergedData);
@@ -675,6 +748,7 @@ class Level02Scene extends Phaser.Scene {
         starBronzeAlpha: this.starBronzeAlpha,
         starAwarded: this.starAwarded,
         round: this.round,
+        ...this.getPersistedSeries2State(),
         returnFromLevel02: true,
         saveRoundSceneToCache: true
       });
@@ -870,6 +944,7 @@ class Level02Scene extends Phaser.Scene {
     const persistedSilverStarAlpha = (typeof this.starSilverAlpha === 'number')
       ? this.starSilverAlpha
       : (typeof gameProgress.starSilverBlackHorseAlpha === 'number' ? gameProgress.starSilverBlackHorseAlpha : 0);
+    const persistedSeries2State = this.getPersistedSeries2State(gameProgress);
 
     const lastSaved = new Date().toISOString();
 
@@ -891,6 +966,7 @@ class Level02Scene extends Phaser.Scene {
         starBronzeAlpha: this.starBronzeAlpha,
         starSilverBlackHorseAlpha: persistedSilverStarAlpha,
         starAwarded: this.starAwarded,
+        ...persistedSeries2State,
         claimedCandyCapacity: this.claimedCandyCapacity,
         scoreCandy: this.scoreCandy,
         buyCandy: this.buyCandy,
@@ -916,6 +992,7 @@ class Level02Scene extends Phaser.Scene {
       userData.gameProgress.starSilverBlackHorseAlpha = persistedSilverStarAlpha;
       userData.gameProgress.starAwarded = this.starAwarded || false;
       userData.gameProgress.starBronzeBlackHorseAlpha = this.starBronzeBlackHorseAlpha || 0;
+      Object.assign(userData.gameProgress, persistedSeries2State);
       userData.gameProgress.claimedCandyCapacity = this.claimedCandyCapacity || 0;
       userData.gameProgress.scoreCandy = this.scoreCandy || 0;
       userData.gameProgress.buyCandy = this.buyCandy || 0;
@@ -938,6 +1015,7 @@ class Level02Scene extends Phaser.Scene {
       userData.gameProgress.starSilverBlackHorseAlpha = persistedSilverStarAlpha;
       userData.gameProgress.starAwarded = this.starAwarded || false;
       userData.gameProgress.starBronzeBlackHorseAlpha = this.starBronzeBlackHorseAlpha || 0;
+      Object.assign(userData.gameProgress, persistedSeries2State);
       userData.gameProgress.claimedCandyCapacity = this.claimedCandyCapacity || 0;
       userData.gameProgress.scoreCandy = this.scoreCandy || 0;
       userData.gameProgress.buyCandy = this.buyCandy || 0;
@@ -1021,6 +1099,19 @@ class Level02Scene extends Phaser.Scene {
         this.starAwarded = pickLatestBoolean('starAwarded', this.starAwarded === true);
         this.starBronzeBlackHorseAlpha = pickLatestNumber('starBronzeBlackHorseAlpha', this.starBronzeBlackHorseAlpha ?? 0);
         this.round = Math.max(1, pickLatestNumber('round', this.round ?? window.round ?? 1));
+        this.applyPersistedSeries2State({
+          series2ScorePeak: pickLatestNumber('series2ScorePeak', this.series2ScorePeak ?? 0),
+          series2PenaltyFloor: pickLatestNumber('series2PenaltyFloor', this.series2PenaltyFloor ?? 0),
+          series2PenaltyLastScore: pickLatestNumber('series2PenaltyLastScore', this.series2PenaltyLastScore ?? 0),
+          series2PenaltyConsecutiveDrop: pickLatestNumber('series2PenaltyConsecutiveDrop', this.series2PenaltyConsecutiveDrop ?? 0),
+          series2PenaltyTotalAccumulatedDrop: pickLatestNumber('series2PenaltyTotalAccumulatedDrop', this.series2PenaltyTotalAccumulatedDrop ?? 0),
+          series2PenaltyStage: latestProgress.series2PenaltyStage ?? fallbackProgress.series2PenaltyStage ?? this.series2PenaltyStage ?? 'normal',
+          series2PenaltyRecoveryStage: latestProgress.series2PenaltyRecoveryStage ?? fallbackProgress.series2PenaltyRecoveryStage ?? this.series2PenaltyRecoveryStage ?? 'none',
+          series2Blocked: pickLatestBoolean('series2Blocked', this.series2Blocked === true),
+          series2BlockCount: pickLatestNumber('series2BlockCount', this.series2BlockCount ?? 0),
+          series2BlockedNeedCandy: pickLatestNumber('series2BlockedNeedCandy', this.series2BlockedNeedCandy ?? 0),
+          series2bhimbieUnlocked: pickLatestBoolean('series2bhimbieUnlocked', this.series2bhimbieUnlocked === true)
+        });
         this.level01HighScore = Math.max(
           readNumber(progress, 'level01HighScore') ?? 0,
           readNumber(localProgress, 'level01HighScore') ?? 0,
@@ -1075,6 +1166,10 @@ class Level02Scene extends Phaser.Scene {
           starSilverBlackHorseAlpha: this.starSilverAlpha,
           starAwarded: this.starAwarded,
           starBronzeBlackHorseAlpha: this.starBronzeBlackHorseAlpha,
+          ...this.getPersistedSeries2State({
+            ...progress,
+            ...localProgress
+          }),
           claimedCandyCapacity: this.claimedCandyCapacity,
           scoreCandy: this.scoreCandy,
           buyCandy: this.buyCandy,
@@ -1142,6 +1237,7 @@ class Level02Scene extends Phaser.Scene {
         this.starAwarded = fallbackUserData.gameProgress.starAwarded || 0;
         this.starBronzeBlackHorseAlpha = fallbackUserData.gameProgress.starBronzeBlackHorseAlpha || 0;
         this.round = fallbackUserData.gameProgress.round || 1;
+        this.applyPersistedSeries2State(fallbackUserData.gameProgress);
         this.level01HighScore = fallbackUserData.gameProgress.level01HighScore || 0;
         this.totalPlays = fallbackUserData.gameProgress.totalPlays || 0;
 
@@ -1188,6 +1284,7 @@ class Level02Scene extends Phaser.Scene {
             level01Attempts: 0,
             round: this.round,
             selectedSeries: this.selectedSeries ?? null,
+            ...this.getPersistedSeries2State(),
             totalPlays: 0,
             bestTime: 0,
             averageTime: 0,
@@ -1257,6 +1354,7 @@ class Level02Scene extends Phaser.Scene {
       const persistedSilverStarAlpha = (typeof this.starSilverAlpha === 'number')
         ? this.starSilverAlpha
         : (typeof gameProgress.starSilverBlackHorseAlpha === 'number' ? gameProgress.starSilverBlackHorseAlpha : 0);
+      const persistedSeries2State = this.getPersistedSeries2State(gameProgress);
       window.updateUserProgress(currentEmail, {
         level01Completed: true,
         level01Score: this.level01Score,
@@ -1267,6 +1365,7 @@ class Level02Scene extends Phaser.Scene {
         starBronzeAlpha: this.starBronzeAlpha,
         starSilverBlackHorseAlpha: persistedSilverStarAlpha,
         starAwarded: this.starAwarded,
+        ...persistedSeries2State,
         claimedCandyCapacity: this.claimedCandyCapacity || gameProgress.claimedCandyCapacity || 0,
         scoreCandy: this.scoreCandy || gameProgress.scoreCandy || 0,
         buyCandy: this.buyCandy || gameProgress.buyCandy || 0,
@@ -1280,6 +1379,7 @@ class Level02Scene extends Phaser.Scene {
       userData.gameProgress = userData.gameProgress || {};
       userData.gameProgress.selectedSeries = persistedSelectedSeries;
       userData.gameProgress.starSilverBlackHorseAlpha = persistedSilverStarAlpha;
+      Object.assign(userData.gameProgress, persistedSeries2State);
       userData.gameProgress.lastSaved = new Date().toISOString();
       localStorage.setItem(`gameData-${currentEmail}`, JSON.stringify(userData));
     }, 5000);
