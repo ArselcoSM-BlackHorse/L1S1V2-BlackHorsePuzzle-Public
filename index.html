@@ -485,7 +485,8 @@
 // 🔧 Service Worker Registration - Seri 1
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
+    //navigator.serviceWorker.register('/service-worker.js') // ini root utama sedangkan file service-worker.js ada di folder L1S1V2 (https://arselcosm-blackhorse.github.io/L1S1V2-BlackHorsePuzzle-Public/service-worker.js)
+    navigator.serviceWorker.register('./service-worker.js') // tambah titik akses ke folder https://arselcosm-blackhorse.github.io/L1S1V2-BlackHorsePuzzle-Public/service-worker.js
       .then((registration) => {
         console.log('✅ Service Worker registered successfully:', registration.scope);
         
