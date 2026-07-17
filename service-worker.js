@@ -1,6 +1,7 @@
 // Import cache assets
 importScripts('cache-assets.js');
 
+const BACKEND_URL = 'https://l1s1v2-backend-paypalblackhorsepuzzle.onrender.com';
 const CACHE_NAME = 'blackhorse-seri1-v1-20251116-2';
 //const urlsToCache = [
 // 🎯 ASSETS UNTUK SERI 1 SAJA (10 PUZZLES)
@@ -20,25 +21,51 @@ const CORE_ASSETS = [
 
 // 🧩 SERI 1 GAME ASSETS (10 PUZZLE PIECES)
 const SERI1_ASSETS = [
+  `${BACKEND_URL}/Puzzle-Assets/UI/Black_Horse_Donation_Panel.png`,
+  `${BACKEND_URL}/Puzzle-Assets/UI/Black_Horse_Pu_qrcode.png`,
+
   // Core game files
   //'./assets/images/black-horse-base.png',
   //'./assets/images/background.png',
   //'./assets/images/grid-background.png',
-  `${window.BACKEND_URL}/Puzzle-Assets/Board_Game_Puzzle_Level_01.webp`,
-  // 10 puzzle pieces untuk Seri 1
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_01.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_02.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_03.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_04.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_05.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_06.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_07.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_08.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_09.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/Level01/Lv01_Hex_10.webp`,
-  `${window.BACKEND_URL}/Puzzle-Assets/UI/Black_Horse_Donation_Panel.png`,
-  `${window.BACKEND_URL}/Puzzle-Assets/UI/Black_Horse_Pu_qrcode.png`,
-  `${window.BACKEND_URL}/Puzzle-Assets/UI/Star_Bronze_Black_Horse.png`,
+  './Puzzle-Assets/Board_Game_Puzzle_Level_01.webp',
+  // Level1 10 puzzle pieces untuk Seri 1
+  './Puzzle-Assets/Level01/Lv01_Hex01_01.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex01_02.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex01_03.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex01_04.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex01_05.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex01_06.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex01_07.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex01_08.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex01_09.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex01_10.webp',
+
+  // Level1 20 puzzle pieces untuk Seri 2
+  './Puzzle-Assets/Level01/Lv01_Hex02_01.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_02.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_03.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_04.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_05.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_06.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_07.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_08.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_09.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_10.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_11.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_12.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_13.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_14.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_15.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_16.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_17.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_18.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_19.webp',
+  './Puzzle-Assets/Level01/Lv01_Hex02_20.webp',
+
+  './Puzzle-Assets/UI/Star_Bronze_Black_Horse.webp',
+  './Puzzle-Assets/UI/Star_Silver_Black_Horse.webp',
+  
   // UI elements
   './Puzzle-Assets/Level01/Lv01_Help_English_Page1.webp',
   './Puzzle-Assets/Level01/Lv01_Help_English_Page2.webp',
