@@ -270,7 +270,7 @@ class Level02Scene extends Phaser.Scene {
   }
 
   setupLogoutHandler() {
-    this.clearSeries2Visuals(true);
+    // this.clearSeries2Visuals(true);
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
       logoutBtn.onclick = null;
@@ -317,7 +317,7 @@ class Level02Scene extends Phaser.Scene {
   setupButtons() {
     const backBtn = this.add.image(100, 1010, 'back').setScale(0.9).setDepth(6001).setInteractive({ useHandCursor: true });
     backBtn.on('pointerdown', async () => {
-      this.clearSeries2Visuals(true);
+      //this.clearSeries2Visuals(true);
       if (!this.isSceneUsable() || this._isTransitioning) return;
       this._isTransitioning = true;
       backBtn.disableInteractive();
