@@ -170,10 +170,10 @@ class Level02Scene extends Phaser.Scene {
     const email = localStorage.getItem('email');
     if (!email) {
       console.log('Belum login, kembali ke SplashScene');
-      //this.scene.start('SplashScene');
-      this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
-        saveRoundSceneToCache: true
-      }));
+      this.scene.start('SplashScene');
+      //this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
+      //  saveRoundSceneToCache: true
+      //}));
       return;
     }
 
@@ -290,10 +290,10 @@ class Level02Scene extends Phaser.Scene {
 
         localStorage.removeItem('email');
         this.cleanupBeforeTransition();
-        //this.scene.start('SplashScene');
-        this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
-          saveRoundSceneToCache: true
-        }));
+        this.scene.start('SplashScene');
+        //this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
+          //saveRoundSceneToCache: true
+        //}));
       };
     }
   }
@@ -766,9 +766,9 @@ class Level02Scene extends Phaser.Scene {
 
       if (!this.isSceneUsable()) return;
       this.cleanupBeforeTransition();
-      //this.scene.start('SplashScene', {
-      this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
-        saveRoundSceneToCache: true,
+      this.scene.start('SplashScene', {
+      //this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
+        //saveRoundSceneToCache: true,
         preserveScore: true,
         level01Score: this.level01Score,
         starBronzeAlpha: this.starBronzeAlpha,
@@ -777,7 +777,7 @@ class Level02Scene extends Phaser.Scene {
         ...this.getPersistedSeries2State(),
         returnFromLevel02: true,
         saveRoundSceneToCache: true
-      }));
+      });
     });
   }
 
