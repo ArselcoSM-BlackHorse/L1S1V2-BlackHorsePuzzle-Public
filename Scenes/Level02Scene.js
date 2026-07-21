@@ -96,6 +96,22 @@ class Level02Scene extends Phaser.Scene {
     this.registry.set('series2bhimbieUnlocked', this.series2bhimbieUnlocked === true);
   }
 
+  buildSplashTransitionPayload(extraData = {}) {
+    return {
+      preserveScore: true,
+      returnFromLevel02: true,
+      round: this.round,
+      selectedSeries: this.selectedSeries,
+      level01Score: this.level01Score,
+      starBronzeAlpha: this.starBronzeAlpha,
+      starSilverBlackHorseAlpha: this.starSilverAlpha,
+      starAwarded: this.starAwarded,
+      saveRoundSceneToCache: true,
+      ...extraData
+    };
+  }
+
+
   saveRoundStarToCache() {
     const emailSnap = localStorage.getItem('email');
     if (!emailSnap) return;
@@ -154,7 +170,10 @@ class Level02Scene extends Phaser.Scene {
     const email = localStorage.getItem('email');
     if (!email) {
       console.log('Belum login, kembali ke SplashScene');
-      this.scene.start('SplashScene');
+      //this.scene.start('SplashScene');
+      this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
+        saveRoundSceneToCache: true
+      }));
       return;
     }
 
@@ -251,7 +270,7 @@ class Level02Scene extends Phaser.Scene {
   }
 
   setupLogoutHandler() {
-    //this.clearSeries2Visuals(true);
+    this.clearSeries2Visuals(true);
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
       logoutBtn.onclick = null;
@@ -271,7 +290,10 @@ class Level02Scene extends Phaser.Scene {
 
         localStorage.removeItem('email');
         this.cleanupBeforeTransition();
-        this.scene.start('SplashScene');
+        //this.scene.start('SplashScene');
+        this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
+          saveRoundSceneToCache: true
+        }));
       };
     }
   }
@@ -295,7 +317,7 @@ class Level02Scene extends Phaser.Scene {
   setupButtons() {
     const backBtn = this.add.image(100, 1010, 'back').setScale(0.9).setDepth(6001).setInteractive({ useHandCursor: true });
     backBtn.on('pointerdown', async () => {
-      //this.clearSeries2Visuals(true);
+      this.clearSeries2Visuals(true);
       if (!this.isSceneUsable() || this._isTransitioning) return;
       this._isTransitioning = true;
       backBtn.disableInteractive();
@@ -744,7 +766,9 @@ class Level02Scene extends Phaser.Scene {
 
       if (!this.isSceneUsable()) return;
       this.cleanupBeforeTransition();
-      this.scene.start('SplashScene', {
+      //this.scene.start('SplashScene', {
+      this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
+        saveRoundSceneToCache: true,
         preserveScore: true,
         level01Score: this.level01Score,
         starBronzeAlpha: this.starBronzeAlpha,
@@ -753,7 +777,7 @@ class Level02Scene extends Phaser.Scene {
         ...this.getPersistedSeries2State(),
         returnFromLevel02: true,
         saveRoundSceneToCache: true
-      });
+      }));
     });
   }
 
