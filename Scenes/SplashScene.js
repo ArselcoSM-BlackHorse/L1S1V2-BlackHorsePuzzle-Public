@@ -138,14 +138,15 @@ class SplashScene extends Phaser.Scene {
     
     this.load.on('complete', () => {
       document.getElementById('loader').style.display = 'none';
-      
+      /*
       if (!localStorage.getItem("email")) {
         document.getElementById("loginBox").style.display = "block";
         document.getElementById("logoutBtn").style.display = "none";
       } else {
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("logoutBtn").style.display = "inline-block";
-      }
+      }*/
+      this.syncAuthUI(!!localStorage.getItem("email"));
     });
   }
 
@@ -157,9 +158,14 @@ class SplashScene extends Phaser.Scene {
     this.events.once('shutdown', this.shutdown, this);
     
     const email = localStorage.getItem("email");
+    if (!email) {
+      this.syncAuthUI(false);
+    } else {
+      this.syncAuthUI(true);
+    }
     // --- Tambahan: Sembunyikan loginBox jika sudah login, sebelum loader selesai ---
     //if (localStorage.getItem("email")) {
-    const loginBox = document.getElementById("loginBox");
+    /*const loginBox = document.getElementById("loginBox");
     const logoutBtn = document.getElementById("logoutBtn");
     if (!email) {
       if (loginBox) loginBox.style.display = "block";
@@ -168,7 +174,8 @@ class SplashScene extends Phaser.Scene {
       if (loginBox) loginBox.style.display = "none";
       if (logoutBtn) logoutBtn.style.display = "inline-block";
     }
-    
+    */
+
     // ✅ CHECK GAME OVER STATUS DARI SERVER
     //window.checkGameOverStatusFromServer();
     
@@ -505,7 +512,8 @@ this.tweens.add({
 cinematicBox.on('pointerdown', () => {
   const email = localStorage.getItem("email");
   if (!email) {
-    document.getElementById("loginBox").style.display = "block";
+    //document.getElementById("loginBox").style.display = "block";
+    this.syncAuthUI(false);
     alert("Please Login with your email!");
     return;
   }
@@ -514,7 +522,8 @@ cinematicBox.on('pointerdown', () => {
 cinematicText.on('pointerdown', () => {
   const email = localStorage.getItem("email");
   if (!email) {
-    document.getElementById("loginBox").style.display = "block";
+    //document.getElementById("loginBox").style.display = "block";
+    this.syncAuthUI(false);
     alert("Please Login with your email!");
     return;
   }
@@ -546,7 +555,8 @@ cinematicText.on('pointerdown', () => {
       btnBlue.setVisible(true);
       const email = localStorage.getItem("email");
       if (!email) {
-        document.getElementById("loginBox").style.display = "block";
+        //document.getElementById("loginBox").style.display = "block";
+        this.syncAuthUI(false);
         alert("Please Login with your email!");
         return;
       }
@@ -2540,12 +2550,26 @@ window.logoutAndReturnToSplash = function() {
   localStorage.removeItem("user_logged_in");
   // (opsional) Hapus data lain yang terkait user jika perlu
 
-  // Sembunyikan tombol logout, tampilkan loginBox
+  /*// Sembunyikan tombol logout, tampilkan loginBox
   const loginBox = document.getElementById("loginBox");
   const logoutBtn = document.getElementById("logoutBtn");
   if (loginBox) loginBox.style.display = "block";
   if (logoutBtn) logoutBtn.style.display = "none";
+  */
 
+  if (typeof window.setLoginBoxVisibility === 'function') {
+    window.setLoginBoxVisibility(true);
+  } else {
+    const loginBox = document.getElementById("loginBox");
+    if (loginBox) {
+      loginBox.classList.remove("hidden");
+      loginBox.style.display = "block";
+    }
+  }
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.style.display = "none";
+  
   // Kembali ke SplashScene
   if (window.game && window.game.scene) {
     window.game.scene.start("SplashScene");

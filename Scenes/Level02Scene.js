@@ -23,6 +23,28 @@ class Level02Scene extends Phaser.Scene {
     this.series2bhimbieUnlocked = false;
   }
 
+  syncAuthUI(forceLoggedIn = !!localStorage.getItem('email')) {
+      const loginBox = document.getElementById('loginBox');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const verificationBox = document.getElementById('verificationBox');
+      
+    if (loginBox) {
+      loginBox.classList.toggle('hidden', forceLoggedIn);
+      loginBox.style.display = forceLoggedIn ? 'none' : 'block';
+      loginBox.style.visibility = forceLoggedIn ? 'hidden' : 'visible';
+      loginBox.style.opacity = forceLoggedIn ? '0' : '1';
+      loginBox.style.pointerEvents = forceLoggedIn ? 'none' : 'auto';
+    }
+
+    if (logoutBtn) {
+      logoutBtn.style.display = forceLoggedIn ? 'inline-block' : 'none';
+    }
+
+    if (verificationBox && !forceLoggedIn) {
+      verificationBox.style.display = 'none';
+    }
+  }
+
   formatScore(v) {
     return String(Number(v) || 0).padStart(this.SCORE_DIGITS, '0');
   }
@@ -145,15 +167,16 @@ class Level02Scene extends Phaser.Scene {
 
     this.load.on('complete', () => {
       document.getElementById('loader').style.display = 'none';
-
+      /*
       if (!localStorage.getItem('email')) {
         document.getElementById('loginBox').style.display = 'block';
         document.getElementById('logoutBtn').style.display = 'none';
       } else {
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('logoutBtn').style.display = 'inline-block';
-        document.getElementById('logoutBtn').style.display = 'inline-block';
       }
+      */
+      this.syncAuthUI(!!localStorage.getItem('email'));
     });
   }
 
@@ -169,6 +192,7 @@ class Level02Scene extends Phaser.Scene {
 
     const email = localStorage.getItem('email');
     if (!email) {
+      this.syncAuthUI(false);
       console.log('Belum login, kembali ke SplashScene');
       this.scene.start('SplashScene');
       //this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
@@ -176,6 +200,8 @@ class Level02Scene extends Phaser.Scene {
       //}));
       return;
     }
+
+    this.syncAuthUI(true);
 
     this.restoreProgressFromCacheEarly(email);
 
@@ -289,6 +315,7 @@ class Level02Scene extends Phaser.Scene {
         }
 
         localStorage.removeItem('email');
+        this.syncAuthUI(false);
         this.cleanupBeforeTransition();
         this.scene.start('SplashScene');
         //this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
