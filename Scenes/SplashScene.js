@@ -278,7 +278,12 @@ class SplashScene extends Phaser.Scene {
     const logoutBtn = document.getElementById("logoutBtn");
     const verificationBox = document.getElementById("verificationBox");
 
-    if (loginBox) loginBox.style.display = forceLoggedIn ? "none" : "block";
+    if (typeof window.setLoginBoxVisibility === 'function') {
+      window.setLoginBoxVisibility(!forceLoggedIn);
+    } else if (loginBox) {
+      loginBox.classList.toggle('hidden', forceLoggedIn);
+      loginBox.style.display = forceLoggedIn ? "none" : "block";
+    }
     if (verificationBox && !forceLoggedIn) verificationBox.style.display = "none";
 
     if (logoutBtn) {
