@@ -146,7 +146,8 @@ class SplashScene extends Phaser.Scene {
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("logoutBtn").style.display = "inline-block";
       }*/
-      this.syncAuthUI(!!localStorage.getItem("email"));
+      //this.syncAuthUI(!!localStorage.getItem("email"));
+      this.syncAuthUI(localStorage.getItem("user_logged_in") === "true");
     });
   }
 
@@ -157,8 +158,11 @@ class SplashScene extends Phaser.Scene {
     this._isTransitioning = false;
     this.events.once('shutdown', this.shutdown, this);
     
+    //const email = localStorage.getItem("email");
+    //if (!email) {
     const email = localStorage.getItem("email");
-    if (!email) {
+    const isLoggedIn = localStorage.getItem("user_logged_in") === "true";
+    if (!isLoggedIn) {
       this.syncAuthUI(false);
     } else {
       this.syncAuthUI(true);
@@ -180,7 +184,8 @@ class SplashScene extends Phaser.Scene {
     //window.checkGameOverStatusFromServer();
     
     // ✅ BACKEND-CONNECTED USER DATA INITIALIZATION + AUTO-SAVE
-    if (email) {
+    //if (email) {
+      if (email && localStorage.getItem("user_logged_in") === "true") {
       this.initUserData(email).then(initResult => {
         if (!this.isSceneUsable()) return;
         if (initResult && initResult.success) {
@@ -280,7 +285,7 @@ class SplashScene extends Phaser.Scene {
     this.bindSplashLogoutButton();
   }
 
-  syncAuthUI(forceLoggedIn = !!localStorage.getItem("email")) {
+  syncAuthUI(forceLoggedIn = localStorage.getItem("user_logged_in") === "true") {
     const loginBox = document.getElementById("loginBox");
     const logoutBtn = document.getElementById("logoutBtn");
     const verificationBox = document.getElementById("verificationBox");
@@ -325,7 +330,7 @@ class SplashScene extends Phaser.Scene {
       if (!this.isSceneUsable() || this._isTransitioning) return;
 
       this._isTransitioning = true;
-      localStorage.removeItem("email");
+      //localStorage.removeItem("email");
       localStorage.removeItem("user_logged_in");
 
       const emailInput = document.getElementById("emailInput");
@@ -446,89 +451,89 @@ class SplashScene extends Phaser.Scene {
     rightBox.on('pointerdown', openRelease);
     rightText.on('pointerdown', openRelease);
     
-// ========== CINEMATIC BUTTON SETUP ==========
-// Lebar tombol: 90% layar atau max 700px
-const screenW = this.sys.game.config.width;
-const btnWidth = Math.min(screenW * 0.9, 700);
-const btnHeight = 90; // Lebih tinggi dari kotak lain
-const btnX = screenW / 2 - btnWidth / 2;
-const btnY = rowY - 100; // Geser ke atas, sesuaikan angka sampai pas di atas kepala kuda
-//const btnY = rowY + BOX_CFG.boxH + 60; // Lebih turun
+    // ========== CINEMATIC BUTTON SETUP ==========
+    // Lebar tombol: 90% layar atau max 700px
+    const screenW = this.sys.game.config.width;
+    const btnWidth = Math.min(screenW * 0.9, 700);
+    const btnHeight = 90; // Lebih tinggi dari kotak lain
+    const btnX = screenW / 2 - btnWidth / 2;
+    const btnY = rowY - 100; // Geser ke atas, sesuaikan angka sampai pas di atas kepala kuda
+    //const btnY = rowY + BOX_CFG.boxH + 60; // Lebih turun
 
-// Tombol kotak besar dengan efek glow cyan
-const cinematicBox = this.add.rectangle(
-  btnX, btnY,
-  btnWidth, btnHeight,
-  0xffffff, 0.10 // transparan putih
-)
-.setOrigin(0, 0.5)
-.setStrokeStyle(4, 0x00eaff, 1)
-.setDepth(100)
-.setInteractive({ useHandCursor: true });
+    // Tombol kotak besar dengan efek glow cyan
+    const cinematicBox = this.add.rectangle(
+      btnX, btnY,
+      btnWidth, btnHeight,
+      0xffffff, 0.10 // transparan putih
+    )
+    .setOrigin(0, 0.5)
+    .setStrokeStyle(4, 0x00eaff, 1)
+    .setDepth(100)
+    .setInteractive({ useHandCursor: true });
 
-// Efek glow luar (layer di bawah)
-const glow = this.add.rectangle(
-  btnX + btnWidth/2, btnY,
-  btnWidth + 32, btnHeight + 24,
-  0x00eaff, 0.18
-).setOrigin(0.5).setDepth(99);
-this.tweens.add({
-  targets: glow,
-  alpha: { from: 0.18, to: 0.38 },
-  duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
-});
+    // Efek glow luar (layer di bawah)
+    const glow = this.add.rectangle(
+      btnX + btnWidth/2, btnY,
+      btnWidth + 32, btnHeight + 24,
+      0x00eaff, 0.18
+    ).setOrigin(0.5).setDepth(99);
+    this.tweens.add({
+      targets: glow,
+      alpha: { from: 0.18, to: 0.38 },
+      duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+    });
 
-// Teks besar di tengah tombol
-const cinematicText = this.add.text(
-  btnX + btnWidth / 2, btnY,
-  'Play Cinematic Black Horse',
-  {
-    font: 'bold 3rem Arial',
-    fill: '#fff',
-    align: 'center',
-    stroke: '#00eaff',
-    strokeThickness: 4,
-    shadow: { color: '#00eaff', blur: 16, fill: true }
-  }
-).setOrigin(0.5).setDepth(101).setInteractive({ useHandCursor: true });
+    // Teks besar di tengah tombol
+    const cinematicText = this.add.text(
+      btnX + btnWidth / 2, btnY,
+      'Play Cinematic Black Horse',
+      {
+      font: 'bold 3rem Arial',
+      fill: '#fff',
+      align: 'center',
+      stroke: '#00eaff',
+      strokeThickness: 4,
+      shadow: { color: '#00eaff', blur: 16, fill: true }
+    }
+    ).setOrigin(0.5).setDepth(101).setInteractive({ useHandCursor: true });
 
-// Efek animasi sweep putih
-const sweep2 = this.add.rectangle(btnX + 20, btnY, 36, btnHeight - 18, 0xffffff, 0.22)
-  .setOrigin(0, 0.5).setDepth(102);
-this.tweens.add({
-  targets: sweep2,
-  x: btnX + btnWidth - 56,
-  duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
-});
+    // Efek animasi sweep putih
+    const sweep2 = this.add.rectangle(btnX + 20, btnY, 36, btnHeight - 18, 0xffffff, 0.22)
+      .setOrigin(0, 0.5).setDepth(102);
+    this.tweens.add({
+      targets: sweep2,
+      x: btnX + btnWidth - 56,
+      duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+    });
 
-// Animasi pulse pada tombol
-this.tweens.add({
-  targets: cinematicBox,
-  alpha: { from: 0.98, to: 0.55 },
-  duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
-});
+    // Animasi pulse pada tombol
+    this.tweens.add({
+      targets: cinematicBox,
+      alpha: { from: 0.98, to: 0.55 },
+      duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+    });
 
-// Event klik tombol
-cinematicBox.on('pointerdown', () => {
-  const email = localStorage.getItem("email");
-  if (!email) {
-    //document.getElementById("loginBox").style.display = "block";
-    this.syncAuthUI(false);
-    alert("Please Login with your email!");
-    return;
-  }
-  this.scene.start('CinematicScene');
-});
-cinematicText.on('pointerdown', () => {
-  const email = localStorage.getItem("email");
-  if (!email) {
-    //document.getElementById("loginBox").style.display = "block";
-    this.syncAuthUI(false);
-    alert("Please Login with your email!");
-    return;
-  }
-  this.scene.start('CinematicScene');
-});
+    // Event klik tombol
+    cinematicBox.on('pointerdown', () => {
+    const email = localStorage.getItem("email");
+    if (!email) {
+      //document.getElementById("loginBox").style.display = "block";
+      this.syncAuthUI(false);
+      alert("Please Login with your email!");
+      return;
+    }
+    this.scene.start('CinematicScene');
+    });
+    cinematicText.on('pointerdown', () => {
+    const email = localStorage.getItem("email");
+      if (!email) {
+      //document.getElementById("loginBox").style.display = "block";
+        this.syncAuthUI(false);
+        alert("Please Login with your email!");
+        return;
+      }
+    this.scene.start('CinematicScene');
+    });
 
 
 
@@ -2569,7 +2574,7 @@ window.logoutAndReturnToSplash = function() {
 
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) logoutBtn.style.display = "none";
-  
+
   // Kembali ke SplashScene
   if (window.game && window.game.scene) {
     window.game.scene.start("SplashScene");
