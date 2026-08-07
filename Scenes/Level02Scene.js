@@ -27,7 +27,7 @@ class Level02Scene extends Phaser.Scene {
       const loginBox = document.getElementById('loginBox');
       const logoutBtn = document.getElementById('logoutBtn');
       const verificationBox = document.getElementById('verificationBox');
-      
+
     if (loginBox) {
       loginBox.classList.toggle('hidden', forceLoggedIn);
       loginBox.style.display = forceLoggedIn ? 'none' : 'block';
@@ -828,8 +828,28 @@ class Level02Scene extends Phaser.Scene {
     console.log('✅ Unlocking all gameplay buttons');
   }
 
+  // Fungsi pesan kecil di atas not music
   showHoldMessageAboveNotes() {
-    console.log('💀 GAME OVER: Showing hold message');
+    // Misal, not music pertama di posisi (1100, 1100)
+    const x = 855; // rata tengah 3 not
+    const y = 1000; // di atas not music
+
+    // Hapus pesan lama jika ada
+    if (this.holdMsgText) this.holdMsgText.destroy();
+
+    // Tampilkan pesan kecil
+    this.holdMsgText = this.add.text(x, y, "Please hold. The game is running.", {
+      font: "bold 32px Arial",
+      fill: "#fff",
+      align: "center",
+      backgroundColor: "#e00",
+      padding: { left: 16, right: 16, top: 4, bottom: 4 }
+    }).setOrigin(0.5).setDepth(5001);
+
+    // Hilang otomatis setelah 2.2 detik
+    this.time.delayedCall(2200, () => {
+      if (this.holdMsgText) this.holdMsgText.destroy();
+    });
   }
 
   async getUserProgress(email) {
