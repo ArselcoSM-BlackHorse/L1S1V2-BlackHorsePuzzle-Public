@@ -314,13 +314,25 @@ class Level02Scene extends Phaser.Scene {
           }
         }
 
-        localStorage.removeItem('email');
+        localStorage.removeItem("user_logged_in");
+
+        const emailInput = document.getElementById("emailInput");
+        const verificationCodeInput = document.getElementById("verificationCodeInput");
+        if (emailInput) emailInput.value = "";
+        if (verificationCodeInput) verificationCodeInput.value = "";
+
+        this.syncAuthUI(false);
+        window.setLoginBoxVisibility?.(true);
+
+        this.scene.start("SplashScene");
+        /*localStorage.removeItem('email');
         this.syncAuthUI(false);
         this.cleanupBeforeTransition();
         this.scene.start('SplashScene');
         //this.beginSceneTransition('SplashScene', this.buildSplashTransitionPayload({
           //saveRoundSceneToCache: true
         //}));
+        };*/
       };
     }
   }

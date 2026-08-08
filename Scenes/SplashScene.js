@@ -515,21 +515,29 @@ class SplashScene extends Phaser.Scene {
 
     // Event klik tombol
     cinematicBox.on('pointerdown', () => {
-    const email = localStorage.getItem("email");
-    if (!email) {
+    const isLoggedIn = localStorage.getItem("user_logged_in") === "true";  
+    //const email = localStorage.getItem("email");
+    //if (!email) {
+    if (!isLoggedIn) {
       //document.getElementById("loginBox").style.display = "block";
       this.syncAuthUI(false);
+      setTimeout(() => {
       alert("Please Login with your email!");
+      }, 0);
+      //alert("Please Login with your email!");
       return;
     }
     this.scene.start('CinematicScene');
     });
     cinematicText.on('pointerdown', () => {
-    const email = localStorage.getItem("email");
-      if (!email) {
+    const isLoggedIn = localStorage.getItem("user_logged_in") === "true";  
+      if (!isLoggedIn) {
       //document.getElementById("loginBox").style.display = "block";
         this.syncAuthUI(false);
+        setTimeout(() => {
         alert("Please Login with your email!");
+        }, 0);
+        //alert("Please Login with your email!");
         return;
       }
     this.scene.start('CinematicScene');
@@ -559,11 +567,13 @@ class SplashScene extends Phaser.Scene {
       level1Glow.setVisible(true);
       btnBlue.setVisible(true);
       const email = localStorage.getItem("email");
-      if (!email) {
-        //document.getElementById("loginBox").style.display = "block";
+      const isLoggedIn = localStorage.getItem("user_logged_in") === "true";
+      if (!isLoggedIn || !email) {
         this.syncAuthUI(false);
+        setTimeout(() => {
         alert("Please Login with your email!");
-        return;
+        }, 0);
+      return;
       }
       this.saveRoundStarToCache?.();
       await this.handleLevel01Click(email, level1Glow, btnBlue);
@@ -592,6 +602,7 @@ class SplashScene extends Phaser.Scene {
       safeDisableInteractive(level1Glow);
       safeDisableInteractive(btnBlue);
 
+      const email = localStorage.getItem("email");
       const localUserData = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}');
       const localProgress = localUserData.gameProgress || {};
       const resolvedScore = this.registry.get('level01Score') ?? this.level01Score ?? localProgress.level01Score ?? 0;
