@@ -2631,10 +2631,6 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
     // Flag global
   window.isPaid = isPaid === true;
 
-  // Sentuh scene aktif
-  //const scene = window.game?.scene?.getScene('Level01Scene');
-  //if (scene) scene.isPaid = isPaid === true;
-
   // ⛔ Jangan ubah UI jika masih dalam proses pembayaran
   const paying = localStorage.getItem('isPaying') === 'true';
   if (paying) {
@@ -2645,15 +2641,6 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
   // ⛔ Hanya izinkan unlock jika verifikasi sesi ini sukses
   if (isPaid === true && window.sessionPaymentOK !== true) {
     console.log('🛡️ Block unlock: sessionPaymentOK=false (not this session)');
-    return;
-  }
-
-  // Drive UI
-  const scene = window.getLevel01SceneSafe?.();
-
-  // ✅ guard keras agar tidak akses Scene yang belum siap/ter-destroy
-  if (!scene) {
-    console.log('⛔ Level01Scene not ready/destroyed. Skip UI update.');
     return;
   }
 
