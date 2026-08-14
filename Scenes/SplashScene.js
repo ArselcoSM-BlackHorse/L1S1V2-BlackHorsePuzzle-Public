@@ -167,19 +167,7 @@ class SplashScene extends Phaser.Scene {
     } else {
       this.syncAuthUI(true);
     }
-    // --- Tambahan: Sembunyikan loginBox jika sudah login, sebelum loader selesai ---
-    //if (localStorage.getItem("email")) {
-    /*const loginBox = document.getElementById("loginBox");
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (!email) {
-      if (loginBox) loginBox.style.display = "block";
-      if (logoutBtn) logoutBtn.style.display = "none";
-    } else {
-      if (loginBox) loginBox.style.display = "none";
-      if (logoutBtn) logoutBtn.style.display = "inline-block";
-    }
-    */
-
+    
     // ✅ CHECK GAME OVER STATUS DARI SERVER
     //window.checkGameOverStatusFromServer();
     
@@ -1919,77 +1907,216 @@ async verifyEmailWithBackend(email) {
 
 } // ← END OF CLASS
 
+
+
 // SYNC PROGRESS DARI BACKEND (POST) >>> tidak ada di userRoutes.js
-  window.syncProgressFromBackend = async (email) => {
+window.syncProgressFromBackend = async (email) => {
   try {
-      console.log('🔄 Syncing progress from backend for:', email);
-      // ✅ STEP 1: Ambil data dari localStorage sebagai fallback
-      const localData = JSON.parse(localStorage.getItem(`gameData-${email}`))?.gameProgress || {};
-      const localProgress = localData.gameProgress || {};
-      console.log('📱 Local data:', localProgress);
-      // ✅ STEP 2: Kirim request ke backend dengan data lokal sebagai konteks
+    console.log('🔄 Syncing progress from backend for:', email);
+    const localData = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}') || {};
+    const localProgress = localData.gameProgress || {};
+    console.log('📱 Local data:', localProgress);
     const response = await axios.post(
-      `${window.BACKEND_URL}/api/users/${encodeURIComponent(email)}/progress`,
-      { 
-        email, 
+      `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/${encodeURIComponent(email)}/progress`,
+      {
+        email,
         level: 'Level01Scene',
-        // Kirim data lokal untuk perbandingan
         localProgress: localProgress
       },
       { timeout: 200000 }
-  );
+    );
   
      // ✅ STEP 3: Ambil data dari backend (PRIORITAS UTAMA)
     const backendData = response.data;
     const progress = backendData.progress || {};
+
+    const parseSavedTime = (value) => {
+      const timestamp = Date.parse(value || 0);
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    };
+    const readNumber = (source, key) => {
+      const value = Number(source?.[key]);
+      return Number.isFinite(value) ? value : null;
+    };
+    const readBoolean = (source, key) => {
+      return typeof source?.[key] === 'boolean' ? source[key] : null;
+    };
+    const readObject = (source, key) => {
+      return source?.[key] && typeof source[key] === 'object' ? source[key] : null;
+    };
+
+    const backendSavedAt = parseSavedTime(progress.lastSaved);
+    const localSavedAt = parseSavedTime(localProgress.lastSaved);
+    const latestProgress = localSavedAt > backendSavedAt ? localProgress : progress;
+    const fallbackProgress = localSavedAt > backendSavedAt ? progress : localProgress;
     
+
+    const pickLatestNumber = (key, fallbackValue = 0) => {
+      const latestValue = readNumber(latestProgress, key);
+      if (latestValue !== null) return latestValue;
+      const fallbackCandidate = readNumber(fallbackProgress, key);
+      if (fallbackCandidate !== null) return fallbackCandidate;
+      const ownValue = Number(fallbackValue);
+      return Number.isFinite(ownValue) ? ownValue : 0;
+    };
+
+    const pickLatestBoolean = (key, fallbackValue = false) => {
+      const latestValue = readBoolean(latestProgress, key);
+      if (latestValue !== null) return latestValue;
+      const fallbackCandidate = readBoolean(fallbackProgress, key);
+      if (fallbackCandidate !== null) return fallbackCandidate;
+      return fallbackValue === true;
+    };
+
+    const pickLatestString = (key, fallbackValue = '') => {
+      const latestValue = typeof latestProgress?.[key] === 'string' ? latestProgress[key] : null;
+      if (latestValue !== null) return latestValue;
+      const fallbackCandidate = typeof fallbackProgress?.[key] === 'string' ? fallbackProgress[key] : null;
+      if (fallbackCandidate !== null) return fallbackCandidate;
+      return String(fallbackValue || '');
+    };
+
+    const pickLatestObject = (key, fallbackValue = null) => {
+      const latestValue = readObject(latestProgress, key);
+      if (latestValue) return latestValue;
+      const fallbackCandidate = readObject(fallbackProgress, key);
+      if (fallbackCandidate) return fallbackCandidate;
+      return fallbackValue;
+    };
+    
+    const totalPlays = Math.max(0, pickLatestNumber('totalPlays', 0));
+    const round = Math.max(1, pickLatestNumber('round', 1));
+    const isGameOver = progress.isGameOver === true || localProgress.isGameOver === true ||localStorage.getItem(`gameOver_${email}`) === 'true';
+
     console.log('🌐 Backend data:', progress);
-    // ✅ STEP 4: Hitung user classification berdasarkan data backend
-    const newUser = !progress || (progress.totalPlays || 0) === 0;
-    const winUser = progress && (progress.totalPlays || 0) >= 1 && (progress.level01Score || 0) > 0;
-    const lossUser = progress && (progress.totalPlays || 0) >= 3 && (progress.level01Score || 0) === 0;
+    // ✅ STEP 1: BACA STATUS GAMEOVER DARI BACKEND & LOCALSTORAGE
+    const isGameOverSaved = 
+      backendData?.isGameOver === true || 
+      progress.isGameOver === true || 
+      localProgress.isGameOver === true || 
+      localStorage.getItem(`gameOver_${email}`) === 'true';
+
+    // ✅ STEP 2: UPDATE localStorage dengan direct variables
+    const mergedSeriesScores = pickLatestObject('seriesScores', localProgress.seriesScores || progress.seriesScores) || { 1: 0, 2: 0 };
+    const mergedLevel01Score =
+      (Number(mergedSeriesScores?.[1]) || 0) +
+      (Number(mergedSeriesScores?.[2]) || 0) ||
+      pickLatestNumber('level01Score', 0);
+    const level01Score = mergedLevel01Score;  
+
+      // ✅ STEP 3: BACA DATA PENTING DARI BACKEND & LOCALSTORAGE
+    const userStatus = {
+      newUser: totalPlays === 0 && !isGameOverSaved && round === 1 && level01Score === 0,
+      winUser: level01Score > 0,
+      lossUser: isGameOverSaved || (round >= 3 && level01Score === 0) || (totalPlays >= 3 && level01Score === 0)
+    };
+    // 3. Ekstrak variabel agar bisa dipakai di baris-baris bawahnya
+    const newUser = userStatus.newUser;
+    const winUser = userStatus.winUser;
+    const lossUser = userStatus.lossUser;
+
+    console.log(`👤 Backend user classification: newUser=${userStatus.newUser}, winUser=${userStatus.winUser}, lossUser=${userStatus.lossUser}`);
     
-    console.log(`👤 Backend user classification: newUser=${newUser}, winUser=${winUser}, lossUser=${lossUser}`);
+    // 💡 [TAMBAHAN BARU]: Jika sync mendeteksi LossUser, matikan akses sessionPaymentOK
+    if (lossUser) {
+      window.sessionPaymentOK = false;
+      console.log('⛔ [Sync] LossUser detected! Resetting window.sessionPaymentOK to false');
+    }
+
+    // ✅ STEP 4: HITUNG VARIABEL SISA
+    const level01HighScore = Math.max(
+      pickLatestNumber('level01HighScore', 0),
+      mergedLevel01Score
+    );
     
-    // ✅ STEP 5: UPDATE localStorage dengan direct variables
-// ✅ STEP 5: UPDATE localStorage dengan direct variables
-const level01Score = progress.level01Score || 0;
-const level01HighScore = progress.level01HighScore || 0;
-const totalPlays = progress.totalPlays || 0;
-const round = progress.round || 1;
-const level01Completed = progress.level01Completed || false;
-const bestTime = progress.bestTime || 0;
-const averageTime = progress.averageTime || 0;
-const completionRate = progress.completionRate || 0;
-const perfectGames = progress.perfectGames || false;
-const totalAttempts = progress.totalAttempts || 0;
-const starBronzeAlpha = progress.starBronzeAlpha || 0;
-const starAwarded = progress.starAwarded || false;
-const starBronzeBlackHorseAlpha = progress.starBronzeBlackHorseAlpha || 0;
-const gameOvers = backendData.gameOvers || 0;
-const lastPlayedDate = backendData.lastPlayedDate || null;
-const updatedUserData = {
-  gameProgress: {
-    level01Score,        
-    level01HighScore,
-    totalPlays,
-    round,
-    level01Completed,
-    bestTime,
-    averageTime,
-    completionRate,
-    perfectGames,
-    totalAttempts,
-    starBronzeAlpha,
-    starAwarded,
-    starBronzeBlackHorseAlpha
-  },
-  newUser,
-  winUser,
-  lossUser,
-  lastSyncTime: new Date().toISOString(),
-  syncedFromBackend: true
-};
+    const claimedCandyCapacity = pickLatestNumber('claimedCandyCapacity', 0);
+    const scoreCandy = pickLatestNumber('scoreCandy', 0);
+    const buyCandy = pickLatestNumber('buyCandy', 0);
+    const candyCount = pickLatestNumber('candyCount', scoreCandy + buyCandy);
+    const lastSaved = latestProgress.lastSaved || fallbackProgress.lastSaved || null;
+    const series2Blocked = pickLatestBoolean('series2Blocked', false);
+    const series2BlockCount = pickLatestNumber('series2BlockCount', 0);
+    const series2BlockedNeedCandy = pickLatestNumber('series2BlockedNeedCandy', 0);
+    const series2bhimbieUnlocked = pickLatestBoolean('series2bhimbieUnlocked', false);
+    const series2PenaltyVisualKey = pickLatestString('series2PenaltyVisualKey', '');
+    const series2PenaltyRecoveryVisualKey = pickLatestString('series2PenaltyRecoveryVisualKey', '');
+    const series2CompanionMode = pickLatestString('series2CompanionMode', 'hidden');
+    const bhMiniS2State = pickLatestString('bhMiniS2State', 'hidden');
+    const level01Completed = pickLatestBoolean('level01Completed', false);
+    const bestTime = pickLatestNumber('bestTime', 0);
+    const averageTime = pickLatestNumber('averageTime', 0);
+    const completionRate = pickLatestNumber('completionRate', 0);
+    const perfectGames = pickLatestBoolean('perfectGames', false);
+    const totalAttempts = pickLatestNumber('totalAttempts', 0);
+    const starBronzeAlpha = pickLatestNumber('starBronzeAlpha', 0);
+    const starAwarded = pickLatestBoolean('starAwarded', false);
+    const starBronzeBlackHorseAlpha = pickLatestNumber('starBronzeBlackHorseAlpha', 0);
+    const gameOvers = backendData.gameOvers || 0;
+    const lastPlayedDate = backendData.lastPlayedDate || null;
+    
+    const updatedUserData = { 
+    gameProgress: {
+      level01Score,        
+      level01HighScore,
+      isGameOver: isGameOver,
+      gameOvers,
+      totalPlays,
+      round,
+      claimedCandyCapacity,
+      scoreCandy,
+      buyCandy,
+      candyCount,
+      lastSaved,
+      series2Blocked,
+      series2BlockCount,
+      series2BlockedNeedCandy,
+      series2bhimbieUnlocked,
+      level01Completed,
+      bestTime,
+      averageTime,
+      completionRate,
+      perfectGames,
+      totalAttempts,
+      starBronzeAlpha,
+      starAwarded,
+      starBronzeBlackHorseAlpha,
+      seriesScores: mergedSeriesScores,
+      seriesScorePeaks: pickLatestObject('seriesScorePeaks', localProgress.seriesScorePeaks || progress.seriesScorePeaks) || { 1: 0, 2: 0 },
+      seriesScoreIncreased: pickLatestObject('seriesScoreIncreased', localProgress.seriesScoreIncreased || progress.seriesScoreIncreased) || { 1: 0, 2: 0 },
+      seriesTotalReduced: pickLatestObject('seriesTotalReduced', localProgress.seriesTotalReduced || progress.seriesTotalReduced) || { 1: 0, 2: 0 },
+      seriesCandyBuy: pickLatestObject('seriesCandyBuy', localProgress.seriesCandyBuy || progress.seriesCandyBuy) || { 1: 0, 2: 0 },
+      seriesCandyBuyUsed: pickLatestObject('seriesCandyBuyUsed', localProgress.seriesCandyBuyUsed || progress.seriesCandyBuyUsed) || { 1: 0, 2: 0 },
+      seriesCandyIncreased: pickLatestObject('seriesCandyIncreased', localProgress.seriesCandyIncreased || progress.seriesCandyIncreased) || { 1: 0, 2: 0 },
+      seriesCandyReduced: pickLatestObject('seriesCandyReduced', localProgress.seriesCandyReduced || progress.seriesCandyReduced) || { 1: 0, 2: 0 },
+      seriesCandyBalance: pickLatestObject('seriesCandyBalance', localProgress.seriesCandyBalance || progress.seriesCandyBalance) || { 1: 0, 2: 0 },
+      seriesCandyScoreEligible: pickLatestObject('seriesCandyScoreEligible', localProgress.seriesCandyScoreEligible || progress.seriesCandyScoreEligible) || { 1: 0, 2: 0 },
+      seriesClaimedCandyCapacity: pickLatestObject('seriesClaimedCandyCapacity', localProgress.seriesClaimedCandyCapacity || progress.seriesClaimedCandyCapacity) || { 1: 0, 2: 0 },
+      series2ScorePeak: pickLatestNumber('series2ScorePeak', latestProgress.series2ScorePeak ?? fallbackProgress.series2ScorePeak ?? 0),
+      series2PenaltyFloor: pickLatestNumber('series2PenaltyFloor', latestProgress.series2PenaltyFloor ?? fallbackProgress.series2PenaltyFloor ?? 0),
+      series2PenaltyLastScore: pickLatestNumber('series2PenaltyLastScore', latestProgress.series2PenaltyLastScore ?? fallbackProgress.series2PenaltyLastScore ?? 0),
+      series2PenaltyConsecutiveDrop: pickLatestNumber('series2PenaltyConsecutiveDrop', latestProgress.series2PenaltyConsecutiveDrop ?? fallbackProgress.series2PenaltyConsecutiveDrop ?? 0),
+      series2PenaltyTotalAccumulatedDrop: pickLatestNumber('series2PenaltyTotalAccumulatedDrop', latestProgress.series2PenaltyTotalAccumulatedDrop ?? fallbackProgress.series2PenaltyTotalAccumulatedDrop ?? 0),
+      series2PenaltyStage: latestProgress.series2PenaltyStage ?? fallbackProgress.series2PenaltyStage ?? 'normal',
+      series2PenaltyRecoveryStage: latestProgress.series2PenaltyRecoveryStage ?? fallbackProgress.series2PenaltyRecoveryStage ?? 'none',
+      series2PenaltyVisualKey,
+      series2PenaltyRecoveryVisualKey,
+      series2CompanionMode,
+      bhMiniS2State,
+      seriesCandyRoundIncreased: pickLatestObject('seriesCandyRoundIncreased', localProgress.seriesCandyRoundIncreased || progress.seriesCandyRoundIncreased) || {
+        1: { 1: 0, 2: 0, 3: 0 },
+        2: { 1: 0, 2: 0, 3: 0 }
+      },
+      seriesCandyRoundReduced: pickLatestObject('seriesCandyRoundReduced', localProgress.seriesCandyRoundReduced || progress.seriesCandyRoundReduced) || {
+        1: { 1: 0, 2: 0, 3: 0 },
+        2: { 1: 0, 2: 0, 3: 0 }
+      }
+    },
+      newUser,
+      winUser,
+      lossUser,
+      lastSyncTime: new Date().toISOString(),
+      syncedFromBackend: true
+    };
     // Update gameData - Simpan data pengguna yang diperbarui ke localStorage
     localStorage.setItem(`gameData-${email}`, JSON.stringify(updatedUserData));
     // Update score
@@ -2007,14 +2134,14 @@ const updatedUserData = {
       totalGamesPlayed: totalPlays || 0,
       highestScore: level01HighScore || 0,
       gameOvers: gameOvers || 0,
+      gameOver: isGameOver,
       lastPlayedDate: lastPlayedDate,
       favoriteGiven: false,
-      newUser,
       winUser,
       lossUser
     }));
-    
-     // ✅ STEP 6: UPDATE global variables
+
+    // ✅ STEP 5: UPDATE global variables
     window.level01Score = level01Score || 0;
     window.playerScore = level01Score || 0;
     window.starBronzeBlackHorseAlpha = starBronzeBlackHorseAlpha || 0;
@@ -2023,7 +2150,8 @@ const updatedUserData = {
     window.round = round || 1;
     window.totalPlays = totalPlays || 0;
     window.level01Completed = level01Completed || false;
-    // ✅ STEP 7: UPDATE UI jika scene sudah aktif
+
+    // ✅ STEP 6: UPDATE UI jika scene sudah aktif
     if (window.Phaser && window.game && window.game.scene) {
       const level01 = window.getLevel01SceneSafe?.(true);
       if (level01) {
@@ -2039,8 +2167,7 @@ const updatedUserData = {
       }
     }
     console.log('✅ Synced progress from backend - Final data:', updatedUserData);
-    console.log('✅ User status:', { newUser, winUser, lossUser });
-    
+
     return {
       progress,
       newUser,
@@ -2142,10 +2269,16 @@ window.checkUserStatusAndGameOver = async function(email) {
   const justWon    = (scene.justWonAt && now - scene.justWonAt < 12000) || (lastWinLs && now - lastWinLs < 12000);
 
   if (isGameOver && lossUser && !hasScore && !justWon) {
+    // 💡 [TAMBAHAN BARU]: MATIKAN AKSES PAYMENT & KUNCI GAMEOVER SECARA GLOBAL
+    window.sessionPaymentOK = false;
+    window.lossUser = true;
+    localStorage.setItem(`gameOver_${email}`, 'true');
+
     scene.isGameOver = true;
     scene.showGameOverReturnMessage?.();
     scene.blur10PuzzleButton?.();
     scene.lockAllGameplayButtons?.();
+    console.log('🔒 [CheckStatus] User Game Over detected! Payment access revoked & buttons locked.');
   } else {
     // newUser atau winUser atau tidak game over → buka kunci
     scene.isGameOver = false;
@@ -2162,7 +2295,7 @@ window.checkUserStatusAndGameOver = async function(email) {
 
     // ✅ KIRIM KE BACKEND - BIARKAN BACKEND HITUNG USER STATUS
     const response = await axios.post(
-      `${window.BACKEND_URL}/api/users/set-gameover`,
+      `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/set-gameover`,
       { email, isGameOver },
       { timeout: 200000 }
     );
@@ -2249,6 +2382,8 @@ window.checkUserStatusAndGameOver = async function(email) {
 
   // 7. Cek game-over langsung ke backend dan update UI lewat scene (bukan this)
 window.checkGameOverStatusFromServer = async function() {
+  const scene = window.getLevel01SceneSafe?.(true);
+  if (!scene) return;
   const email = localStorage.getItem('email');
   if (!email) return null;
 
@@ -2264,9 +2399,12 @@ window.checkGameOverStatusFromServer = async function() {
     const scene = window.getLevel01SceneSafe?.();
     if (!scene) return data;
 
+    let localProgress = {};
+
     let freshLocal = false;
     try {
       const snap = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}');
+      localProgress = snap?.gameProgress || {};
       const ts = Date.parse(snap?.gameProgress?.lastSaved || 0);
       freshLocal = ts && (Date.now() - ts) <= 15000;
     } catch {}
@@ -2280,17 +2418,26 @@ window.checkGameOverStatusFromServer = async function() {
     }
     scene.starAwarded = data.starAwarded ?? scene.starAwarded ?? false;
     scene.starBronzeBlackHorseAlpha = data.starBronzeBlackHorseAlpha ?? scene.starBronzeBlackHorseAlpha ?? 0;
-
+    scene.starSilverAlpha = data.starSilverAlpha ?? scene.starSilverAlpha ?? 0;
+    
     const lossUser = !!data.lossUser;
     const winUser = !!data.winUser;
     const newUser = !!data.newUser;
 
     if (scene.isGameOver && lossUser) {
+      // 💡 [PENGAMAN UTAMA]: Kunci status payment dan GameOver secara global
+      window.sessionPaymentOK = false;
+      window.lossUser = true;
+      localStorage.setItem(`gameOver_${email}`, 'true');
+
       scene.showGameOverReturnMessage?.();
       scene.blur10PuzzleButton?.();
       scene.lockAllGameplayButtons?.();
     } else {
      // winUser/newUser/tidak game over → buka kunci
+      window.lossUser = false;
+      localStorage.removeItem(`gameOver_${email}`);
+
       scene.isGameOver = false;
       scene.unblur10PuzzleButton?.();
       scene.unlockAllGameplayButtons?.();
@@ -2307,6 +2454,7 @@ window.checkGameOverStatusFromServer = async function() {
       snap.gameProgress.level01Score = scene.level01Score;
       snap.gameProgress.round = scene.round;
       snap.gameProgress.starBronzeAlpha = scene.starBronzeAlpha;
+      snap.gameProgress.starSilverAlpha = scene.starSilverAlpha;
       snap.gameProgress.starAwarded = scene.starAwarded;
       snap.gameProgress.starBronzeBlackHorseAlpha = scene.starBronzeBlackHorseAlpha;
       localStorage.setItem(`gameData-${email}`, JSON.stringify(snap));
@@ -2325,12 +2473,25 @@ window.checkGameOverStatusFromServer = async function() {
     try {
       console.log('🔍 Checking payment status for:', email);
       const res = await axios.post(
-        `${window.BACKEND_URL}/api/${encodeURIComponent(email)}/payment-status`,
+        `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/${encodeURIComponent(email)}/payment-status`,
         {},
         { timeout: 200000 }
       );
       const data = res.data;
       console.log('💳 Payment status response:', data);
+
+      const isGameOverNow = window.lossUser === true || 
+                      localStorage.getItem(`gameOver_${email}`) === 'true';
+
+      // 💡 Guard Clause: Jika user Game Over, abaikan respon paid dari backend!
+      if (data && data.isPaid && !isGameOverNow) {
+        window.sessionPaymentOK = true;
+        console.log('✅ Payment active & User is playable.');
+      } else {
+        window.sessionPaymentOK = false;
+        console.log('⛔ Access denied: Payment invalid or User is GameOver.');
+      }
+
 
       if (data && data.success) {
         return {
@@ -2369,11 +2530,20 @@ window.checkGameOverStatusFromServer = async function() {
     try {
       console.log('💳 Checking payment status for:', email);
       const response = await axios.post(
-      `${window.BACKEND_URL}/api/${encodeURIComponent(email)}/payment-status`,
+      `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/${encodeURIComponent(email)}/payment-status`,
       {},
       { timeout: 20000 }
     );
       const urlParams = new URLSearchParams(window.location.search);
+
+      // 💡 1. AMBIL STATUS GAME OVER / LOSSUSER SAAT INI
+      const isGameOverNow = 
+        window.lossUser === true || 
+        localStorage.getItem(`gameOver_${email}`) === 'true';
+
+      // 💡 2. CEK URL PARAMETER (JIKA USER BARU KEMBALI DARI REDIRECT PEMBAYARAN XSOLLA/PAYPAL)
+      const isXsollaPaid = urlParams.get('paid') === '1';
+      const isPayPalPaid = urlParams.get('paypal_paid') === '1' || urlParams.get('paypal_success') === 'true' || (urlParams.get('token') && urlParams.get('PayerID'));  
 
       // Check Xsolla payment
       if (urlParams.get('paid') === '1') {
@@ -2399,6 +2569,28 @@ window.checkGameOverStatusFromServer = async function() {
         }
         result = { paid: true, method: 'paypal' };
       }
+
+      // 💡 3. JIKA TIDAK ADA URL PARAMETER, GUNAKAN HASIL DARI RESPON BACKEND (UPDATE TERKINI)
+    else if (response.data && response.data.isPaid) {
+      console.log('✅ Payment active detected from Backend response');
+      result = { paid: true, method: response.data.method || 'backend' };
+    }
+
+    // 💡 4. PENEGASAN UTAMA: JIKA GAME OVER, PAKSA PAID JADI FALSE!
+    if (isGameOverNow) {
+      console.log('⛔ User is in Game Over / Loss state. Revoking payment status!');
+      result = { paid: false, method: result.method || 'gameover_blocked' };
+
+      if (window.safeUpdatePaymentStatus) {
+        window.safeUpdatePaymentStatus(false);
+      }
+    } else {
+      // Update status jika user TIDAK Game Over
+      if (window.safeUpdatePaymentStatus) {
+        window.safeUpdatePaymentStatus(result.paid, result.method);
+      }
+    }
+
     } catch (error) {
       console.error('❌ Payment check failed:', error);
       if (window.safeUpdatePaymentStatus) {
@@ -2414,6 +2606,12 @@ window.checkGameOverStatusFromServer = async function() {
   // 3. Fungsi update status pembayaran game
 // ✅ ENHANCED GAME PAYMENT STATUS UPDATE WITH isPaid FLAG:
 window.updateGamePaymentStatus = function(isPaid, method = null, additionalData = {}) {
+    const scene = window.getLevel01SceneSafe?.();
+    if (!scene) { 
+      console.log('⛔ Level01Scene not ready/destroyed. Skip UI update.'); 
+       return;
+    }
+  
     const email = localStorage.getItem("email");
     if (!email) {
       console.error('❌ email not defined in updateGamePaymentStatus');
@@ -2454,10 +2652,30 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
   const scene = window.getLevel01SceneSafe?.();
 
   // ✅ guard keras agar tidak akses Scene yang belum siap/ter-destroy
-if (!scene) {
-  console.log('⛔ Level01Scene not ready/destroyed. Skip UI update.');
-  return;
-}
+  if (!scene) {
+    console.log('⛔ Level01Scene not ready/destroyed. Skip UI update.');
+    return;
+  }
+
+   if (isPaid === true && method === 'xsolla') {
+      try {
+        const email = localStorage.getItem('email');
+        const pendingCandyPurchase = JSON.parse(localStorage.getItem(`pendingCandyPurchase_${email}`) || 'null');
+        if (pendingCandyPurchase) {
+          const rewardId = additionalData.transactionId || String(pendingCandyPurchase.startedAt || Date.now());
+          const rewardKey = `rewardedCandyPurchase_${email}_${rewardId}`;
+          if (!localStorage.getItem(rewardKey)) {
+            const rewardCandy = Math.max(1, Number(pendingCandyPurchase.rewardCandy) || Math.round(Number(additionalData.amount) || 0));
+            scene.addCandy?.(rewardCandy, 'buyCandy');
+            scene.saveScorePersistent?.().catch(() => {});
+            localStorage.setItem(rewardKey, 'true');
+            localStorage.removeItem(`pendingCandyPurchase_${email}`);
+          }
+        }
+      } catch (rewardError) {
+        console.warn('⚠️ Failed to apply candy reward from Xsolla purchase:', rewardError);
+      }
+    }
 
   if (isPaid === true) {
     scene.hideGameLockMessage?.();
@@ -2465,12 +2683,27 @@ if (!scene) {
     scene.unlockGameAfterPurchase?.(true);
     window.unlockPlayAndHideGameOver?.();
   } else {
+    // ✅ Jangan kunci untuk newUser/winUser. Kunci hanya untuk lossUser + gameOver.
+    let snap = {};
+    try { snap = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}'); } catch {}
+
+    const shouldLock = (snap.isGameOver === true) && (snap.lossUser === true);
+
+    if (shouldLock) {
     // Opsional: tetap kunci
     scene.blur10PuzzleButton?.();
     scene.lockAllGameplayButtons?.();
     // pastikan donasi juga terkunci
     if (scene.donationBtn) { scene.donationBtn.disableInteractive(); scene.donationBtn.setAlpha(0.5); }
     window.lockPlayAndShowGameOver?.();
+  } else {
+      // newUser / winUser / tidak game over => pastikan terbuka
+      scene.hideGameLockMessage?.();
+      scene.unblur10PuzzleButton?.();
+      scene.unlockAllGameplayButtons?.();
+      // donation boleh tetap kamu atur sesuai desain; ini contoh dibuka:
+      if (scene.donationBtn) { scene.donationBtn.setInteractive(); scene.donationBtn.setAlpha(1); }
+    }
   }
 
   console.log('💳 Payment status updated:', {
@@ -2485,7 +2718,7 @@ if (!scene) {
   window.lockLevel = async function (email, level) {
     try {
       const res = await axios.post(
-        `${window.BACKEND_URL}/api/users/lock`,
+        `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/lock`,
         { email, level },
         { timeout: 200000 }
       );
@@ -2531,7 +2764,7 @@ if (!scene) {
    
     // Jika sudah bayar, lanjut unlock level
     const unlockRes = await axios.post(
-      `${window.BACKEND_URL}/api/users/unlock`,
+      `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/unlock`,
       { email, level: 'Level01Scene', isPaid: true },
       { timeout: 200000 }
     );
