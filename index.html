@@ -1261,31 +1261,290 @@ window.addEventListener('beforeunload', () => {
 
 // Tambahkan di index.html, sebelum dipakai
 window.syncProgressFromBackend = async function(email) {
-  try {
-    // Contoh: ambil progress dari backend
-    const res = await axios.post(
-      `${window.BACKEND_URL}/api/users/${encodeURIComponent(email)}/progress`,
-      {},
+ try {
+    console.log('🔄 Syncing progress from backend for:', email);
+    const localData = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}') || {};
+    const localProgress = localData.gameProgress || {};
+    console.log('📱 Local data:', localProgress);
+    const response = await axios.post(
+      `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/${encodeURIComponent(email)}/progress`,
+      {
+        email,
+        level: 'Level01Scene',
+        localProgress: localProgress
+      },
       { timeout: 200000 }
     );
-    const data = res.data;
-    // Simpan ke localStorage jika perlu
-    if (data && data.success && data.progress) {
-      localStorage.setItem(`gameData-${email}`, JSON.stringify({
-        gameProgress: data.progress,
-        lastSyncFromBackend: new Date().toISOString(),
-        backendSyncSuccess: true
-      }));
-      return { success: true, progress: data.progress };
-    } else {
-      return { success: false };
-    }
-  } catch (err) {
-    console.error('❌ syncProgressFromBackend error:', err);
-    return { success: false, error: err };
-  }
-};
+  
+     // ✅ STEP 3: Ambil data dari backend (PRIORITAS UTAMA)
+    const backendData = response.data;
+    const progress = backendData.progress || {};
 
+    const parseSavedTime = (value) => {
+      const timestamp = Date.parse(value || 0);
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    };
+    const readNumber = (source, key) => {
+      const value = Number(source?.[key]);
+      return Number.isFinite(value) ? value : null;
+    };
+    const readBoolean = (source, key) => {
+      return typeof source?.[key] === 'boolean' ? source[key] : null;
+    };
+    const readObject = (source, key) => {
+      return source?.[key] && typeof source[key] === 'object' ? source[key] : null;
+    };
+
+    const backendSavedAt = parseSavedTime(progress.lastSaved);
+    const localSavedAt = parseSavedTime(localProgress.lastSaved);
+    const latestProgress = localSavedAt > backendSavedAt ? localProgress : progress;
+    const fallbackProgress = localSavedAt > backendSavedAt ? progress : localProgress;
+    
+
+    const pickLatestNumber = (key, fallbackValue = 0) => {
+      const latestValue = readNumber(latestProgress, key);
+      if (latestValue !== null) return latestValue;
+      const fallbackCandidate = readNumber(fallbackProgress, key);
+      if (fallbackCandidate !== null) return fallbackCandidate;
+      const ownValue = Number(fallbackValue);
+      return Number.isFinite(ownValue) ? ownValue : 0;
+    };
+
+    const pickLatestBoolean = (key, fallbackValue = false) => {
+      const latestValue = readBoolean(latestProgress, key);
+      if (latestValue !== null) return latestValue;
+      const fallbackCandidate = readBoolean(fallbackProgress, key);
+      if (fallbackCandidate !== null) return fallbackCandidate;
+      return fallbackValue === true;
+    };
+
+    const pickLatestString = (key, fallbackValue = '') => {
+      const latestValue = typeof latestProgress?.[key] === 'string' ? latestProgress[key] : null;
+      if (latestValue !== null) return latestValue;
+      const fallbackCandidate = typeof fallbackProgress?.[key] === 'string' ? fallbackProgress[key] : null;
+      if (fallbackCandidate !== null) return fallbackCandidate;
+      return String(fallbackValue || '');
+    };
+
+    const pickLatestObject = (key, fallbackValue = null) => {
+      const latestValue = readObject(latestProgress, key);
+      if (latestValue) return latestValue;
+      const fallbackCandidate = readObject(fallbackProgress, key);
+      if (fallbackCandidate) return fallbackCandidate;
+      return fallbackValue;
+    };
+    
+    const totalPlays = Math.max(0, pickLatestNumber('totalPlays', 0));
+    const round = Math.max(1, pickLatestNumber('round', 1));
+    const isGameOver = progress.isGameOver === true || localProgress.isGameOver === true ||localStorage.getItem(`gameOver_${email}`) === 'true';
+
+    console.log('🌐 Backend data:', progress);
+    // ✅ STEP 1: BACA STATUS GAMEOVER DARI BACKEND & LOCALSTORAGE
+    const isGameOverSaved = 
+      backendData?.isGameOver === true || 
+      progress.isGameOver === true || 
+      localProgress.isGameOver === true || 
+      localStorage.getItem(`gameOver_${email}`) === 'true';
+
+    // ✅ STEP 2: UPDATE localStorage dengan direct variables
+    const mergedSeriesScores = pickLatestObject('seriesScores', localProgress.seriesScores || progress.seriesScores) || { 1: 0, 2: 0 };
+    const mergedLevel01Score =
+      (Number(mergedSeriesScores?.[1]) || 0) +
+      (Number(mergedSeriesScores?.[2]) || 0) ||
+      pickLatestNumber('level01Score', 0);
+    const level01Score = mergedLevel01Score;  
+
+      // ✅ STEP 3: BACA DATA PENTING DARI BACKEND & LOCALSTORAGE
+    const userStatus = {
+      newUser: totalPlays === 0 && !isGameOverSaved && round === 1 && level01Score === 0,
+      winUser: level01Score > 0,
+      lossUser: isGameOverSaved || (round >= 3 && level01Score === 0) || (totalPlays >= 3 && level01Score === 0)
+    };
+    // 3. Ekstrak variabel agar bisa dipakai di baris-baris bawahnya
+    const newUser = userStatus.newUser;
+    const winUser = userStatus.winUser;
+    const lossUser = userStatus.lossUser;
+
+    console.log(`👤 Backend user classification: newUser=${userStatus.newUser}, winUser=${userStatus.winUser}, lossUser=${userStatus.lossUser}`);
+    
+    // 💡 [TAMBAHAN BARU]: Jika sync mendeteksi LossUser, matikan akses sessionPaymentOK
+    if (lossUser) {
+      window.sessionPaymentOK = false;
+      console.log('⛔ [Sync] LossUser detected! Resetting window.sessionPaymentOK to false');
+    }
+
+    // ✅ STEP 4: HITUNG VARIABEL SISA
+    const level01HighScore = Math.max(
+      pickLatestNumber('level01HighScore', 0),
+      mergedLevel01Score
+    );
+    
+    const claimedCandyCapacity = pickLatestNumber('claimedCandyCapacity', 0);
+    const scoreCandy = pickLatestNumber('scoreCandy', 0);
+    const buyCandy = pickLatestNumber('buyCandy', 0);
+    const candyCount = pickLatestNumber('candyCount', scoreCandy + buyCandy);
+    const lastSaved = latestProgress.lastSaved || fallbackProgress.lastSaved || null;
+    const series2Blocked = pickLatestBoolean('series2Blocked', false);
+    const series2BlockCount = pickLatestNumber('series2BlockCount', 0);
+    const series2BlockedNeedCandy = pickLatestNumber('series2BlockedNeedCandy', 0);
+    const series2bhimbieUnlocked = pickLatestBoolean('series2bhimbieUnlocked', false);
+    const series2PenaltyVisualKey = pickLatestString('series2PenaltyVisualKey', '');
+    const series2PenaltyRecoveryVisualKey = pickLatestString('series2PenaltyRecoveryVisualKey', '');
+    const series2CompanionMode = pickLatestString('series2CompanionMode', 'hidden');
+    const bhMiniS2State = pickLatestString('bhMiniS2State', 'hidden');
+    const level01Completed = pickLatestBoolean('level01Completed', false);
+    const bestTime = pickLatestNumber('bestTime', 0);
+    const averageTime = pickLatestNumber('averageTime', 0);
+    const completionRate = pickLatestNumber('completionRate', 0);
+    const perfectGames = pickLatestBoolean('perfectGames', false);
+    const totalAttempts = pickLatestNumber('totalAttempts', 0);
+    const starBronzeAlpha = pickLatestNumber('starBronzeAlpha', 0);
+    const starAwarded = pickLatestBoolean('starAwarded', false);
+    const starBronzeBlackHorseAlpha = pickLatestNumber('starBronzeBlackHorseAlpha', 0);
+    const gameOvers = backendData.gameOvers || 0;
+    const lastPlayedDate = backendData.lastPlayedDate || null;
+    
+    const updatedUserData = { 
+    gameProgress: {
+      level01Score,        
+      level01HighScore,
+      isGameOver: isGameOver,
+      gameOvers,
+      totalPlays,
+      round,
+      claimedCandyCapacity,
+      scoreCandy,
+      buyCandy,
+      candyCount,
+      lastSaved,
+      series2Blocked,
+      series2BlockCount,
+      series2BlockedNeedCandy,
+      series2bhimbieUnlocked,
+      level01Completed,
+      bestTime,
+      averageTime,
+      completionRate,
+      perfectGames,
+      totalAttempts,
+      starBronzeAlpha,
+      starAwarded,
+      starBronzeBlackHorseAlpha,
+      seriesScores: mergedSeriesScores,
+      seriesScorePeaks: pickLatestObject('seriesScorePeaks', localProgress.seriesScorePeaks || progress.seriesScorePeaks) || { 1: 0, 2: 0 },
+      seriesScoreIncreased: pickLatestObject('seriesScoreIncreased', localProgress.seriesScoreIncreased || progress.seriesScoreIncreased) || { 1: 0, 2: 0 },
+      seriesTotalReduced: pickLatestObject('seriesTotalReduced', localProgress.seriesTotalReduced || progress.seriesTotalReduced) || { 1: 0, 2: 0 },
+      seriesCandyBuy: pickLatestObject('seriesCandyBuy', localProgress.seriesCandyBuy || progress.seriesCandyBuy) || { 1: 0, 2: 0 },
+      seriesCandyBuyUsed: pickLatestObject('seriesCandyBuyUsed', localProgress.seriesCandyBuyUsed || progress.seriesCandyBuyUsed) || { 1: 0, 2: 0 },
+      seriesCandyIncreased: pickLatestObject('seriesCandyIncreased', localProgress.seriesCandyIncreased || progress.seriesCandyIncreased) || { 1: 0, 2: 0 },
+      seriesCandyReduced: pickLatestObject('seriesCandyReduced', localProgress.seriesCandyReduced || progress.seriesCandyReduced) || { 1: 0, 2: 0 },
+      seriesCandyBalance: pickLatestObject('seriesCandyBalance', localProgress.seriesCandyBalance || progress.seriesCandyBalance) || { 1: 0, 2: 0 },
+      seriesCandyScoreEligible: pickLatestObject('seriesCandyScoreEligible', localProgress.seriesCandyScoreEligible || progress.seriesCandyScoreEligible) || { 1: 0, 2: 0 },
+      seriesClaimedCandyCapacity: pickLatestObject('seriesClaimedCandyCapacity', localProgress.seriesClaimedCandyCapacity || progress.seriesClaimedCandyCapacity) || { 1: 0, 2: 0 },
+      series2ScorePeak: pickLatestNumber('series2ScorePeak', latestProgress.series2ScorePeak ?? fallbackProgress.series2ScorePeak ?? 0),
+      series2PenaltyFloor: pickLatestNumber('series2PenaltyFloor', latestProgress.series2PenaltyFloor ?? fallbackProgress.series2PenaltyFloor ?? 0),
+      series2PenaltyLastScore: pickLatestNumber('series2PenaltyLastScore', latestProgress.series2PenaltyLastScore ?? fallbackProgress.series2PenaltyLastScore ?? 0),
+      series2PenaltyConsecutiveDrop: pickLatestNumber('series2PenaltyConsecutiveDrop', latestProgress.series2PenaltyConsecutiveDrop ?? fallbackProgress.series2PenaltyConsecutiveDrop ?? 0),
+      series2PenaltyTotalAccumulatedDrop: pickLatestNumber('series2PenaltyTotalAccumulatedDrop', latestProgress.series2PenaltyTotalAccumulatedDrop ?? fallbackProgress.series2PenaltyTotalAccumulatedDrop ?? 0),
+      series2PenaltyStage: latestProgress.series2PenaltyStage ?? fallbackProgress.series2PenaltyStage ?? 'normal',
+      series2PenaltyRecoveryStage: latestProgress.series2PenaltyRecoveryStage ?? fallbackProgress.series2PenaltyRecoveryStage ?? 'none',
+      series2PenaltyVisualKey,
+      series2PenaltyRecoveryVisualKey,
+      series2CompanionMode,
+      bhMiniS2State,
+      seriesCandyRoundIncreased: pickLatestObject('seriesCandyRoundIncreased', localProgress.seriesCandyRoundIncreased || progress.seriesCandyRoundIncreased) || {
+        1: { 1: 0, 2: 0, 3: 0 },
+        2: { 1: 0, 2: 0, 3: 0 }
+      },
+      seriesCandyRoundReduced: pickLatestObject('seriesCandyRoundReduced', localProgress.seriesCandyRoundReduced || progress.seriesCandyRoundReduced) || {
+        1: { 1: 0, 2: 0, 3: 0 },
+        2: { 1: 0, 2: 0, 3: 0 }
+      }
+    },
+      newUser,
+      winUser,
+      lossUser,
+      lastSyncTime: new Date().toISOString(),
+      syncedFromBackend: true
+    };
+    // Update gameData - Simpan data pengguna yang diperbarui ke localStorage
+    localStorage.setItem(`gameData-${email}`, JSON.stringify(updatedUserData));
+    // Update score
+    localStorage.setItem(`score_${email}`, (level01Score || 0).toString());
+   
+    // Update game history
+    localStorage.setItem(`gameHistory_${email}`, JSON.stringify({
+      hasPlayedBefore: (totalPlays || 0) > 0,
+      round: round,
+      starBronzeAlpha: starBronzeAlpha,
+      starAwarded: starAwarded,
+      starBronzeBlackHorseAlpha: starBronzeBlackHorseAlpha,
+      bestTime: bestTime,
+      levelCompleted: level01Completed,
+      totalGamesPlayed: totalPlays || 0,
+      highestScore: level01HighScore || 0,
+      gameOvers: gameOvers || 0,
+      gameOver: isGameOver,
+      lastPlayedDate: lastPlayedDate,
+      favoriteGiven: false,
+      winUser,
+      lossUser
+    }));
+
+    // ✅ STEP 5: UPDATE global variables
+    window.level01Score = level01Score || 0;
+    window.playerScore = level01Score || 0;
+    window.starBronzeBlackHorseAlpha = starBronzeBlackHorseAlpha || 0;
+    window.starBronzeAlpha = starBronzeAlpha || 0;
+    window.starAwarded = starAwarded || false;
+    window.round = round || 1;
+    window.totalPlays = totalPlays || 0;
+    window.level01Completed = level01Completed || false;
+
+    // ✅ STEP 6: UPDATE UI jika scene sudah aktif
+    if (window.Phaser && window.game && window.game.scene) {
+      const level01 = window.getLevel01SceneSafe?.(true);
+      if (level01) {
+        // Update score di scene
+        if (level01.level01Score !== undefined) {
+          level01.level01Score = level01Score || 0;
+        }
+        // Update scoreText
+        if (level01.scoreText && typeof level01.scoreText.setText === 'function') {
+          level01.scoreText.setText((level01Score || 0).toString().padStart(6, '0'));
+        }
+        console.log('🎮 Scene updated with backend data');
+      }
+    }
+    console.log('✅ Synced progress from backend - Final data:', updatedUserData);
+
+    return {
+      progress,
+      newUser,
+      winUser,
+      lossUser,
+      success: true
+    };
+    
+  } catch (err) {
+    console.error('❌ Failed to sync progress from backend:', err);
+    
+    // ✅ FALLBACK: Jika backend gagal, gunakan data lokal
+    const localData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
+    const localProgress = localData.gameProgress || {};
+    
+    console.log('🔄 Using local fallback data:', localProgress);
+    
+    return {
+      progress: localProgress,
+      newUser: localData.newUser || false,
+      winUser: localData.winUser || false,  
+      lossUser: localData.lossUser || false,
+      success: false,
+      error: err.message
+    };
+  }  
+  }
 //=================================== BATAS SENDBEACON ====================================
 
 document.addEventListener('visibilitychange', () => {

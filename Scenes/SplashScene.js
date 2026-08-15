@@ -2381,9 +2381,7 @@ window.checkUserStatusAndGameOver = async function(email) {
   }
 
   // 7. Cek game-over langsung ke backend dan update UI lewat scene (bukan this)
-window.checkGameOverStatusFromServer = async function() {
-  const scene = window.getLevel01SceneSafe?.(true);
-  if (!scene) return;
+  window.checkGameOverStatusFromServer = async function() {
   const email = localStorage.getItem('email');
   if (!email) return null;
 
@@ -2395,31 +2393,72 @@ window.checkGameOverStatusFromServer = async function() {
     );
 
     console.log('🎮 GameOver status from backend:', data);
-
-    const scene = window.getLevel01SceneSafe?.();
+   
+    const scene = window.getLevel01SceneSafe?.(true);
     if (!scene) return data;
 
-    let localProgress = {};
-
+    // fresh-local guard (≤15s)
     let freshLocal = false;
     try {
       const snap = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}');
-      localProgress = snap?.gameProgress || {};
       const ts = Date.parse(snap?.gameProgress?.lastSaved || 0);
       freshLocal = ts && (Date.now() - ts) <= 15000;
     } catch {}
 
+    const localScore = Math.max(
+      0,
+      Number(scene.level01Score) || 0,
+      Number(snap?.gameProgress?.level01Score) || 0
+    );
+    const backendScore = Math.max(0, Number(data.level01Score) || 0);
+    const shouldAcceptBackendScore =
+      freshLocal !== true &&
+      (
+        backendScore >= localScore ||
+        (data.isGameOver === true && backendScore === 0)
+      );
+
     // Sinkron properti dari backend
     scene.isGameOver = !!data.isGameOver;
-    if (!freshLocal) {
-      scene.level01Score = data.level01Score ?? scene.level01Score ?? 0;
-      scene.round = data.round ?? scene.round ?? 1;
-      scene.starBronzeAlpha = data.starBronzeAlpha ?? scene.starBronzeAlpha ?? 0;
+
+    if (shouldAcceptBackendScore) {
+      scene.level01Score = backendScore;
     }
-    scene.starAwarded = data.starAwarded ?? scene.starAwarded ?? false;
-    scene.starBronzeBlackHorseAlpha = data.starBronzeBlackHorseAlpha ?? scene.starBronzeBlackHorseAlpha ?? 0;
-    scene.starSilverAlpha = data.starSilverAlpha ?? scene.starSilverAlpha ?? 0;
+
+    if (!freshLocal) {
+      if (typeof data.round === 'number') {
+        scene.round = Math.max(Number(scene.round) || 1, Number(data.round) || 1);
+      }
+      if (typeof data.starBronzeAlpha === 'number') {
+        scene.starBronzeAlpha = Math.max(Number(scene.starBronzeAlpha) || 0, Number(data.starBronzeAlpha) || 0);
+      }
+      // 💡 [GABUNGAN]: Tambahkan Star Silver dengan Math.max agar aman!
+      if (typeof data.starSilverAlpha === 'number') {
+        scene.starSilverAlpha = Math.max(Number(scene.starSilverAlpha) || 0, Number(data.starSilverAlpha) || 0);
+      }
+    }
+
+    if (typeof data.starAwarded === 'boolean') scene.starAwarded = scene.starAwarded === true || data.starAwarded;
+    if (typeof data.starBronzeBlackHorseAlpha === 'number') {
+      scene.starBronzeBlackHorseAlpha = Math.max(
+        Number(scene.starBronzeBlackHorseAlpha) || 0,
+        Number(data.starBronzeBlackHorseAlpha) || 0
+      );
+      scene.starSilverBlackHorseAlpha = Math.max(
+        Number(scene.starSilverBlackHorseAlpha) || 0,
+        Number(data.starSilverBlackHorseAlpha) || 0
+      );
+    }
     
+    scene.syncRuntimeScoreState?.();
+    scene.refreshStarVisibility?.();
+    scene.updateCandyFromScore?.();
+    scene.registry.set('round', scene.round || 1);
+    scene.registry.set('starBronzeAlpha', scene.starBronzeAlpha || 0);
+    scene.registry.set('starSilverAlpha', scene.starSilverAlpha || 0);
+    scene.registry.set('starAwarded', scene.starAwarded === true);
+    scene.saveRoundStarToCache?.();
+
     const lossUser = !!data.lossUser;
     const winUser = !!data.winUser;
     const newUser = !!data.newUser;
@@ -2430,16 +2469,20 @@ window.checkGameOverStatusFromServer = async function() {
       window.lossUser = true;
       localStorage.setItem(`gameOver_${email}`, 'true');
 
+   
+      scene.isGameOverBlocked = true;
       scene.showGameOverReturnMessage?.();
       scene.blur10PuzzleButton?.();
+      scene.blur20PuzzleButton?.();
       scene.lockAllGameplayButtons?.();
     } else {
-     // winUser/newUser/tidak game over → buka kunci
-      window.lossUser = false;
-      localStorage.removeItem(`gameOver_${email}`);
-
       scene.isGameOver = false;
+      localStorage.removeItem(`gameOver_${email}`);
+      window.sessionPaymentOK = true;
+      window.lossUser = false;
+      scene.isGameOverBlocked = false;
       scene.unblur10PuzzleButton?.();
+      scene.unblur20PuzzleButton?.();
       scene.unlockAllGameplayButtons?.();
     }
 
@@ -2457,15 +2500,16 @@ window.checkGameOverStatusFromServer = async function() {
       snap.gameProgress.starSilverAlpha = scene.starSilverAlpha;
       snap.gameProgress.starAwarded = scene.starAwarded;
       snap.gameProgress.starBronzeBlackHorseAlpha = scene.starBronzeBlackHorseAlpha;
+      snap.gameProgress.starSilverBlackHorseAlpha = scene.starSilverBlackHorseAlpha;
       localStorage.setItem(`gameData-${email}`, JSON.stringify(snap));
     } catch {}
 
-    return data;
-  } catch (err) {
-    console.error('❌ Error checking gameover:', err);
-    return null;
-  }
-};
+     return data;
+   } catch (err) {
+     console.error('❌ Error checking gameover:', err);
+     return null;
+   }
+  };  
 
   // WINDOW FOR PAYMENT CHECK FROM BACKEND
   // 1. Fungsi cek status pembayaran dari backend (detail)
@@ -2473,7 +2517,7 @@ window.checkGameOverStatusFromServer = async function() {
     try {
       console.log('🔍 Checking payment status for:', email);
       const res = await axios.post(
-        `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/${encodeURIComponent(email)}/payment-status`,
+        `${(window.BACKEND_URL||'').trim().replace(/\/+$/,'')}/api/${encodeURIComponent(email)}/payment-status`,
         {},
         { timeout: 200000 }
       );
@@ -2492,10 +2536,9 @@ window.checkGameOverStatusFromServer = async function() {
         console.log('⛔ Access denied: Payment invalid or User is GameOver.');
       }
 
-
       if (data && data.success) {
         return {
-          isPaid: data.isPaid === true,
+          isPaid: isGameOverNow ? false : (data.isPaid === true),
           supportAmount: data.supportAmount || 0,
           paymentMethods: data.paymentMethods || [],
           gameStats: data.gameStats || {},
@@ -2639,7 +2682,7 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
   }
 
   // ⛔ Hanya izinkan unlock jika verifikasi sesi ini sukses
-  if (isPaid === true && window.sessionPaymentOK !== true) {
+  if (isPaid === true && window.lossUser === false && window.sessionPaymentOK !== true) {
     console.log('🛡️ Block unlock: sessionPaymentOK=false (not this session)');
     return;
   }
@@ -2749,23 +2792,28 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
 
     console.log('✅ Payment verified! Proceeding to unlock level...');
    
-    // Jika sudah bayar, lanjut unlock level
+     // Jika sudah bayar, lanjut unlock level
+    const base = (window.BACKEND_URL || '').trim().replace(/\/+$/,'');
     const unlockRes = await axios.post(
-      `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/unlock`,
+      `${base}/api/users/unlock`,
       { email, level: 'Level01Scene', isPaid: true },
       { timeout: 200000 }
     );
 
     console.log('🔓 Unlock level response:', unlockRes.data);
 
-   if (unlockRes.data.success || unlockRes.data.unlocked === true) { 
-     this.unblur10PuzzleButton(); // Hapus blur tombol 10 puzzle
-     this.unlockGameAfterPurchase(); // Aktifkan tombol Play & Puzzle
-    } 
+    const isUnlocked = unlockRes.data.success || unlockRes.data.unlocked === true;
+
+    // ✅ panggil method pada scene, bukan this
+    const scene = window.getLevel01SceneSafe?.();
+    if (isUnlocked && scene) {
+      scene.unblur10PuzzleButton?.(true);
+      scene.unlockGameAfterPurchase?.(true);
+    }
    
     // ✅ LOGIKA UNLOCK LEVEL:
     // Jika backend mengembalikan { success: true } atau { unlocked: true }
-    const isUnlocked = unlockRes.data.success || unlockRes.data.unlocked === true;
+    // const isUnlocked = unlockRes.data.success || unlockRes.data.unlocked === true; // sudah didefinisikan di atas
     console.log('🎯 Final unlock result:', isUnlocked);
     return isUnlocked;
     // Response backend bisa { success: true, unlocked: true }
@@ -2785,13 +2833,6 @@ window.logoutAndReturnToSplash = function() {
   localStorage.removeItem("email");
   localStorage.removeItem("user_logged_in");
   // (opsional) Hapus data lain yang terkait user jika perlu
-
-  /*// Sembunyikan tombol logout, tampilkan loginBox
-  const loginBox = document.getElementById("loginBox");
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (loginBox) loginBox.style.display = "block";
-  if (logoutBtn) logoutBtn.style.display = "none";
-  */
 
   if (typeof window.setLoginBoxVisibility === 'function') {
     window.setLoginBoxVisibility(true);
