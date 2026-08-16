@@ -2513,7 +2513,7 @@ window.checkUserStatusAndGameOver = async function(email) {
 
   // WINDOW FOR PAYMENT CHECK FROM BACKEND
   // 1. Fungsi cek status pembayaran dari backend (detail)
-  window.checkPaymentStatusFromBackend = async function(email) {
+   window.checkPaymentStatusFromBackend = async function(email) {
     try {
       console.log('🔍 Checking payment status for:', email);
       const res = await axios.post(
@@ -2524,16 +2524,21 @@ window.checkUserStatusAndGameOver = async function(email) {
       const data = res.data;
       console.log('💳 Payment status response:', data);
 
-      const isGameOverNow = window.lossUser === true || 
-                      localStorage.getItem(`gameOver_${email}`) === 'true';
+      // 💡 SINKRONKAN JUGA STATUS GAMEOVER DARI BACKEND RESPON!
+      const isGameOverFromBackend = data && (data.isGameOver === true || data.lossUser === true);
+      const isGameOverLocal = window.lossUser === true || localStorage.getItem(`gameOver_${email}`) === 'true';
+      const isGameOverNow = isGameOverFromBackend || isGameOverLocal;
 
-      // 💡 Guard Clause: Jika user Game Over, abaikan respon paid dari backend!
+      if (isGameOverNow) {
+        localStorage.setItem(`gameOver_${email}`, 'true');
+        window.lossUser = true;
+        window.sessionPaymentOK = false;
+      }
+
       if (data && data.isPaid && !isGameOverNow) {
         window.sessionPaymentOK = true;
-        console.log('✅ Payment active & User is playable.');
       } else {
         window.sessionPaymentOK = false;
-        console.log('⛔ Access denied: Payment invalid or User is GameOver.');
       }
 
       if (data && data.success) {
@@ -2649,17 +2654,16 @@ window.checkUserStatusAndGameOver = async function(email) {
   // 3. Fungsi update status pembayaran game
 // ✅ ENHANCED GAME PAYMENT STATUS UPDATE WITH isPaid FLAG:
 window.updateGamePaymentStatus = function(isPaid, method = null, additionalData = {}) {
-    const scene = window.getLevel01SceneSafe?.();
-    if (!scene) { 
+  const scene = window.getLevel01SceneSafe?.();
+  if (!scene || !scene.sys || !scene.sys.settings || !scene.sys.settings.active) { 
       console.log('⛔ Level01Scene not ready/destroyed. Skip UI update.'); 
        return;
-    }
-  
-    const email = localStorage.getItem("email");
-    if (!email) {
+  }
+  const email = localStorage.getItem("email");
+  if (!email) {
       console.error('❌ email not defined in updateGamePaymentStatus');
       return;
-    }
+  }
     
     // ✅ EXPLICIT isPaid FLAG
     const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
@@ -2687,7 +2691,7 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
     return;
   }
 
-   if (isPaid === true && method === 'xsolla') {
+    if (isPaid === true && method === 'xsolla') {
       try {
         const email = localStorage.getItem('email');
         const pendingCandyPurchase = JSON.parse(localStorage.getItem(`pendingCandyPurchase_${email}`) || 'null');
@@ -2707,6 +2711,7 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
       }
     }
 
+  // Update UI berdasarkan status pembayaran
   if (isPaid === true) {
     scene.hideGameLockMessage?.();
     scene.unblur10PuzzleButton?.(true);
