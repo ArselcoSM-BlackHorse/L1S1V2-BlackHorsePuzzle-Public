@@ -367,7 +367,7 @@ class Level02Scene extends Phaser.Scene {
 
       if (this.isGameOver) {
         this.showGameOverReturnMessage();
-        this.showHoldMessageAboveNotes();
+        //this.showHoldMessageAboveNotes();
         backBtn.setInteractive();
         this._isTransitioning = false;
         return;
