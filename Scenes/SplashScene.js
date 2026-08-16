@@ -1887,26 +1887,21 @@ async verifyEmailWithBackend(email) {
   shutdown() {
     if (this._isShuttingDown) return;
     this._isShuttingDown = true;
-    this._isTransitioning = false;
 
-    if (this.autoSaveInterval) {
-      clearInterval(this.autoSaveInterval);
-      this.autoSaveInterval = null;
-    }
+    console.log('🛑 SplashScene shutting down...');
 
-    if (this.paymentCheckInterval) {
-      clearInterval(this.paymentCheckInterval);
-      this.paymentCheckInterval = null;
-    }
+    // Reset flag transisi
+    window.isTransitioning = false;
+    this.isStartingLevel = false;
 
-    this.tweens?.killAll?.();
-    this.sound.stopAll();
-    this.time.removeAllEvents();
-    this.input?.removeAllListeners?.();
+    // Hentikan timer & tween Splash
+    this.time?.removeAllEvents();
+    this.tweens?.killAll();
+    this.sound?.stopAll();
+
+    console.log('✅ SplashScene shutdown complete');
   }
-
-} // ← END OF CLASS
-
+}
 
 
 // SYNC PROGRESS DARI BACKEND (POST) >>> tidak ada di userRoutes.js

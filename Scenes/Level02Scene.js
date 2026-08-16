@@ -1473,32 +1473,45 @@ class Level02Scene extends Phaser.Scene {
   }
 
   shutdown() {
-    if (this._isShuttingDown) return;
-    this._isShuttingDown = true;
-    this._isTransitioning = false;
-    console.log('🛑 Level02Scene shutting down...');
+  if (this._isShuttingDown) return;
+  this._isShuttingDown = true;
 
-    if (this._escKeyHandler) {
-      this.input.keyboard.off('keydown-ESC', this._escKeyHandler, this);
-    }
+  console.log('🛑 Level02Scene shutting down...');
 
-    if (this.autoSaveInterval) {
-      clearInterval(this.autoSaveInterval);
-      this.autoSaveInterval = null;
-    }
+  // 1. Reset Flag Global & Navigasi
+  window.isGameRunning = false;
+  window.isTransitioning = false;
+  this._isTransitioning = false;
+  this.isNavigating = false;
 
-    if (this.donationTimer) {
-      this.donationTimer.destroy();
-      this.donationTimer = null;
-      console.log('⏰ Timer destroyed on shutdown');
-    }
-
-    this.closeDonationDisplay();
-    this.sound.stopAll();
-    this.time.removeAllEvents();
-
-    console.log('✅ Level02Scene shutdown complete');
+  // 2. Off Event ESC Listener & Interval
+  if (this._escKeyHandler) {
+    this.input.keyboard.off('keydown-ESC', this._escKeyHandler, this);
   }
+
+  if (this.autoSaveInterval) {
+    clearInterval(this.autoSaveInterval);
+    this.autoSaveInterval = null;
+  }
+
+  if (this.donationTimer) {
+    this.donationTimer.destroy();
+    this.donationTimer = null;
+  }
+
+  // 3. Sembunyikan UI Display & Hold Message
+  if (typeof this.hideHoldMessage === 'function') {
+    this.hideHoldMessage();
+  }
+  this.closeDonationDisplay();
+
+  // 4. Hentikan Timer, Tween, dan Suara
+  this.time?.removeAllEvents();
+  this.tweens?.killAll();
+  this.sound?.stopAll();
+
+  console.log('✅ Level02Scene shutdown complete');
+ }
 }
 
 window.Level02Scene = Level02Scene;
