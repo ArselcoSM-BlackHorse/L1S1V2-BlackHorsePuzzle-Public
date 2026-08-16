@@ -570,6 +570,16 @@ class SplashScene extends Phaser.Scene {
     
 
   async handleLevel01Click(email, level1Glow, btnBlue) {
+    if (this.isStartingLevel) return; // Mencegah double-click
+    this.isStartingLevel = true;
+
+    // Reset flag lock global sebelum masuk Level01Scene
+    window.isGameRunning = false;
+
+    // Hentikan scene splash dan mulai Level01Scene
+    this.scene.stop('SplashScene');
+    this.scene.start('Level01Scene');
+
     const safeSetVisible = (gameObject, visible) => {
       if (!gameObject || !gameObject.scene || !gameObject.scene.sys || gameObject.scene.sys.isDestroyed || gameObject.active === false) {
         return;

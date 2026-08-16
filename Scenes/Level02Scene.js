@@ -373,6 +373,17 @@ class Level02Scene extends Phaser.Scene {
         return;
       }
 
+      // Tandai bahwa perpindahan scene sengaja dilakukan oleh player
+      this.isNavigating = true;
+      window.isGameRunning = false; 
+
+      // Matikan semua timer aktif di scene 2
+      this.time?.removeAllEvents();
+
+      // Pindah kembali ke Level01Scene dengan aman
+      this.scene.stop('Level02Scene');
+      this.scene.start('Level01Scene', { fromBackNav: true });
+
       this.startLevel01Scene({
         preserveScore: true,
         level01Score: this.registry.get('level01Score') ?? this.level01Score ?? 0,
@@ -824,6 +835,10 @@ class Level02Scene extends Phaser.Scene {
 
   // Fungsi pesan kecil di atas not music
   showHoldMessageAboveNotes() {
+    // Jika scene sudah tidak aktif atau sedang berpindah scene secara sah, abaikan pesan hold!
+    if (!this.sys || !this.sys.settings.active || this.isNavigating) {
+      return;
+    }
     // Misal, not music pertama di posisi (1100, 1100)
     const x = 855; // rata tengah 3 not
     const y = 1000; // di atas not music
