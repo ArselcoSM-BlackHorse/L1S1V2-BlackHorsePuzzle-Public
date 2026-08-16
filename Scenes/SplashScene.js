@@ -22,25 +22,6 @@ if (!window.payments.verifyPaypal) {
     const { data } = await axios.post(`${base}/api/paypal/verify-paypal`, { email }, { timeout: 20000 });
     return data; // { verified, status, transactionId, amount, completedAt|date|timestamp }
   };
-
-  // ✅ Check payment status from backend (with Game Over check)
-  const isGameOverFromBackend = res.data && (res.data.isGameOver === true || res.data.lossUser === true);
-  const isGameOverLocal = localStorage.getItem(`gameOver_${email}`) === 'true';
-
-  if (isGameOverFromBackend || isGameOverLocal) {
-    console.log('⛔ [SplashScene] Game Over detected! Blocking auto-unlock.');
-    window.sessionPaymentOK = false;
-    window.lossUser = true;
-    localStorage.setItem(`gameOver_${email}`, 'true');
-  
-    // Kirim data Game Over ke Level01Scene agar Level01Scene tahu user ini Game Over!
-    this.scene.start('Level01Scene', { 
-      isGameOver: true, 
-      lossUser: true, 
-      isPaid: false 
-    });
-    return;
-  }
 }
 
 // ✅ SAFE EMERGENCY SAVE ON BEFOREUNLOAD (DI LUAR CLASS)
