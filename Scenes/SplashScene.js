@@ -636,6 +636,14 @@ class SplashScene extends Phaser.Scene {
       
     
       if (email) {
+        // Pengaman di SplashScene & Level01Scene sebelum memanggil Backend
+        const storedEmail = localStorage.getItem("email");
+        if (!storedEmail || storedEmail === "undefined" || storedEmail === "null") {
+            console.warn("⚠️ User belum login, batalkan auto-check backend.");
+            return; 
+        }
+        const email = storedEmail;
+
         try {
           const paymentData = await window.checkPaymentStatusFromBackend(email);  
           if (paymentData && paymentData.isPaid === true) {
@@ -656,7 +664,7 @@ class SplashScene extends Phaser.Scene {
         console.warn('⚠️ Payment check error, skipping backend check:', payErr);
         }
       }
-      
+
         /*// ✅ TAMBAHKAN UNLOCK LOGIC YANG LEBIH LENGKAP
         this.unblur10PuzzleButton();
         this.unlockGameAfterPurchase();
