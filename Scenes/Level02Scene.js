@@ -340,12 +340,18 @@ class Level02Scene extends Phaser.Scene {
     backBtn.on('pointerdown', async () => {
       //this.clearSeries2Visuals(true);
       if (!this.isSceneUsable() || this._isTransitioning) return;
+
+      // 💡 1. Set Flag Transisi & Matikan Interaksi Tombol agar Tidak Double Click
       this._isTransitioning = true;
+      this.isNavigating = true;
+      window.isGameRunning = false; 
+      window.isTransitioning = false;
       backBtn.disableInteractive();
 
+      // 💡 2. Simpan Progress Local/Cache
       this.saveRoundStarToCache();
 
-      const email = localStorage.getItem('email');
+      /*const email = localStorage.getItem('email');
       if (!email) {
         this.startLevel01Scene({
           preserveScore: true,
@@ -395,6 +401,55 @@ class Level02Scene extends Phaser.Scene {
         ...this.getPersistedSeries2State(),
         returnFromLevel02: true
       });
+    });
+  }*/
+      const email = localStorage.getItem('email');
+      if (email) {
+        try {
+          await this.saveScorePersistent();
+        } catch (error) {
+          console.warn('❌ Error saving before back:', error);
+        }
+      }
+
+      // Cek Keamanan Scene Sebelum Melanjutkan
+      if (!this.isSceneUsable()) return;
+
+      // 💡 3. Matikan Timer & Event Async Milik Level02Scene Sebelum Pindah
+      if (this.autoSyncTimer) {
+        this.autoSyncTimer.remove();
+        this.autoSyncTimer = null;
+      }
+      this.time?.removeAllEvents();
+      this.tweens?.killAll();
+
+      // Tutup Pesan Hold (jika sedang aktif)
+      if (typeof this.hideHoldMessage === 'function') {
+          this.hideHoldMessage();
+      }
+
+      // 💡 4. Susun Payload Data yang Lengkap untuk Level01Scene
+      const navPayload = {
+        preserveScore: true,
+        level01Score: this.registry.get('level01Score') ?? this.level01Score ?? 0,
+        round: this.registry.get('round') ?? this.round ?? 1,
+        starBronzeAlpha: this.registry.get('starBronzeAlpha') ?? this.starBronzeAlpha ?? 0,
+        starSilverBlackHorseAlpha: this.registry.get('starSilverBlackHorseAlpha') ?? this.starSilverAlpha ?? 0,
+        selectedSeries: this.registry.get('selectedSeries') ?? this.selectedSeries ?? null,
+        starAwarded: this.registry.get('starAwarded') ?? this.starAwarded ?? false,
+        ...this.getPersistedSeries2State(),
+        returnFromLevel02: true,
+        fromBackNav: true,
+        allowPurchase: true // Izinkan belanja menu favorit walau status Game Over
+      };
+
+      // 💡 5. Eksekusi Pindah Scene (Pilih Salah Satu Helper)
+      if (typeof this.startLevel01Scene === 'function') {
+        this.startLevel01Scene(navPayload);
+      } else {
+        this.scene.stop('Level02Scene');
+        this.scene.start('Level01Scene', navPayload);
+      }
     });
   }
 

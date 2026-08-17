@@ -570,16 +570,15 @@ class SplashScene extends Phaser.Scene {
     
 
   async handleLevel01Click(email, level1Glow, btnBlue) {
-    if (this.isStartingLevel) return; // Mencegah double-click
+    if (this.isStartingLevel || this._isTransitioning) return; // Mencegah double-click
     this.isStartingLevel = true;
+    this._isTransitioning = true;
 
-    // Reset flag lock global sebelum masuk Level01Scene
+    // 1.Reset flag lock global sebelum masuk Level01Scene
     window.isGameRunning = false;
+    window.isTransitioning = false;
 
-    // Hentikan scene splash dan mulai Level01Scene
-    this.scene.stop('SplashScene');
-    this.scene.start('Level01Scene');
-
+    // 2. Safe UI Helper (Cek ketersediaan scene)
     const safeSetVisible = (gameObject, visible) => {
       if (!gameObject || !gameObject.scene || !gameObject.scene.sys || gameObject.scene.sys.isDestroyed || gameObject.active === false) {
         return;
@@ -595,18 +594,22 @@ class SplashScene extends Phaser.Scene {
     };
 
     try {
-      if (!this.isSceneUsable() || this._isTransitioning) return;
+      if (!this.isSceneUsable()) return;
 
+      // Matikan interaksi tombol Splash agar tidak bisa diklik ulang saat memuat data
       safeDisableInteractive(level1Glow);
       safeDisableInteractive(btnBlue);
 
+      // 3. Persiapkan Data & Progress Local
       const email = localStorage.getItem("email");
       const localUserData = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}');
       const localProgress = localUserData.gameProgress || {};
       const resolvedScore = this.registry.get('level01Score') ?? this.level01Score ?? localProgress.level01Score ?? 0;
       const resolvedRound = this.registry.get('round') ?? this.round ?? localProgress.round ?? 1;
       const resolvedStarAlpha = this.registry.get('starBronzeAlpha') ?? this.starBronzeAlpha ?? localProgress.starBronzeAlpha ?? 0;
-      const resolvedSilverStarAlpha = this.registry.get('starSilverBlackHorseAlpha') ?? this.starSilverAlpha ?? localProgress.starSilverBlackHorseAlpha ?? 0;
+      const resolvedSilverStarAlpha = this.registry.get('starSilverAlpha') ?? this.starSilverAlpha ?? localProgress.starSilverAlpha ?? 0;
+      const resolvedStarBronzeBlackHorseAlpha = this.registry.get('starBronzeBlackHorseAlpha') ?? this.starBronzeBlackHorseAlpha ?? localProgress.starBronzeBlackHorseAlpha ?? 0;
+      const resolvedSilverBlackHorseAlpha = this.registry.get('starSilverBlackHorseAlpha') ?? this.starSilverBlackHorseAlpha ?? localProgress.starSilverBlackHorseAlpha ?? 0;
       const resolvedStarAwarded = this.registry.get('starAwarded') ?? this.starAwarded ?? localProgress.starAwarded ?? false;
       const resolvedSelectedSeries =
         (Number(localProgress.selectedSeries) === 1 || Number(localProgress.selectedSeries) === 2)
@@ -624,15 +627,29 @@ class SplashScene extends Phaser.Scene {
       const resolvedSeries2BlockedNeedCandy = Number(localProgress.series2BlockedNeedCandy) || 0;
       const resolvedSeries2bhimbieUnlocked = localProgress.series2bhimbieUnlocked === true;
 
-      // ✅ AUTO PAYMENT CHECK
+      // ✅ 4. AUTO PAYMENT CHECK
       console.log('🔍 Auto checking payment status for:', email);
       const paymentData = await window.checkPaymentStatusFromBackend(email);
       if (!this.isSceneUsable()) return;
       
+      let isPaidDetected = false;
+
       if (paymentData && paymentData.isPaid === true) {
         console.log('✅ Payment detected! Auto-unlocking game...');
+        isPaidDetected = true;
 
-        // ✅ TAMBAHKAN UNLOCK LOGIC YANG LEBIH LENGKAP
+        // Clear local game over state
+        localStorage.removeItem(`gameOver_${email}`);
+      
+        // Update local storage user data
+        localUserData.isGameOver = false;
+        localUserData.isPaid = true;
+        localStorage.setItem(`gameData-${email}`, JSON.stringify(localUserData));
+      } else {
+        console.log('❌ No payment detected - using local preserved transition state');
+      }
+
+        /*// ✅ TAMBAHKAN UNLOCK LOGIC YANG LEBIH LENGKAP
         this.unblur10PuzzleButton();
         this.unlockGameAfterPurchase();
         this.unlockAllGameplayButtons();
@@ -680,13 +697,18 @@ class SplashScene extends Phaser.Scene {
         return;
        }
 
-      console.log('❌ No payment detected - using local preserved transition state');
+      console.log('❌ No payment detected - using local preserved transition state');*/
 
+      // 5. Susun Payload TransitionData Lengkap
       const transitionData = {
+        isGameOver: isPaidDetected ? false : !!(localUserData.lossUser || localUserData.isGameOver),
+        isPaid: isPaidDetected,
         preserveScore: true,
         level01Score: resolvedScore,
         round: resolvedRound,
         starBronzeAlpha: resolvedStarAlpha,
+        starSilverAlpha: resolvedSilverStarAlpha,
+        starBronzeBlackHorseAlpha: resolvedStarAlpha,
         starSilverBlackHorseAlpha: resolvedSilverStarAlpha,
         starAwarded: resolvedStarAwarded,
         selectedSeries: resolvedSelectedSeries,
@@ -701,23 +723,35 @@ class SplashScene extends Phaser.Scene {
         series2BlockCount: resolvedSeries2BlockCount,
         series2BlockedNeedCandy: resolvedSeries2BlockedNeedCandy,
         series2bhimbieUnlocked: resolvedSeries2bhimbieUnlocked,
-        isGameOver: !!(localUserData.lossUser || localUserData.isGameOver),
+        //isGameOver: !!(localUserData.lossUser || localUserData.isGameOver),
         returnFromSplashScene: true
       };
 
       safeSetVisible(level1Glow, false);
       safeSetVisible(btnBlue, false);
-      console.log('🎮 Proceeding to Level01Scene with preserved state only:', transitionData);
-      this._isTransitioning = true;
+      //console.log('🎮 Proceeding to Level01Scene with preserved state only:', transitionData);
+      //this._isTransitioning = true;
+      //this.scene.start("Level01Scene", transitionData);
+
+      // 6. Matikan Event Timer Splash & Lakukan Perpindahan Scene Secara Bersih
+      this.time?.removeAllEvents();
+      this.tweens?.killAll();
+
+      console.log('🎮 Proceeding to Level01Scene:', transitionData);
+    
+      // 💡 EKSEKUSI PINDAH SCENE HANYA DI BAGIAN AKHIR SINI:
       this.scene.start("Level01Scene", transitionData);
+      this.scene.stop("SplashScene");
 
     } catch (error) {
       this._isTransitioning = false;
+      this.isStartingLevel = false;
       if (this.isSceneUsable()) {
         safeSetVisible(level1Glow, false);
         safeSetVisible(btnBlue, false);
       }
-      alert("Failed to check user status: " + error.message);
+      //alert("Failed to check user status: " + error.message);
+      console.error("❌ Failed to check user status:", error);
     }
   }
 
