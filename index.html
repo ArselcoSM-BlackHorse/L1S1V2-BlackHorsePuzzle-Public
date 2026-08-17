@@ -105,43 +105,8 @@
         height: 100%;
       }
 
-      /*
-      #landingOverlay, #maintenance-overlay
-      #loader {
-        position: relative;
-        overflow: hidden;
-        isolation: isolate;
-        background:
-          radial-gradient(circle at 50% 0%, rgba(236, 141, 6, 0.18) 0%, rgba(236, 141, 6, 0) 20%),
-          radial-gradient(circle at 55% 18%, rgba(79, 215, 232, 0.10) 0%, rgba(79, 215, 232, 0) 28%),
-          linear-gradient(180deg, #2c2218 0%, #3b2818 50%, #5c3b22 100%);
-      }*/
-
-      body:not(.level02-mode) #loader::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background:
-          radial-gradient(circle at 18% 72%, rgba(236, 141, 6, 0.16) 0%, rgba(236, 141, 6, 0) 18%),
-          radial-gradient(circle at 38% 78%, rgba(205, 132, 52, 0.12) 0%, rgba(205, 132, 52, 0) 20%),
-          radial-gradient(circle at 68% 70%, rgba(255, 214, 153, 0.10) 0%, rgba(255, 214, 153, 0) 16%),
-          radial-gradient(circle at 82% 82%, rgba(147, 98, 44, 0.14) 0%, rgba(147, 98, 44, 0) 22%);
-        opacity: 0.95;
-        animation: loaderDustDrift 10s ease-in-out infinite alternate;
-      }
-
-      body:not(.level02-mode) #loader::after { 
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background:
-          linear-gradient(180deg, rgba(255, 214, 153, 0.04) 0%, rgba(255, 214, 153, 0) 30%),
-          linear-gradient(0deg, rgba(74, 45, 19, 0.28) 0%, rgba(74, 45, 19, 0) 26%);
-        mix-blend-mode: screen;
-        opacity: 0.55;
-      }
+    
+      
 
       @keyframes loaderDustDrift {
         0% {
