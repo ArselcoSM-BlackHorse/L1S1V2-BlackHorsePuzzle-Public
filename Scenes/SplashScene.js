@@ -578,21 +578,19 @@ class SplashScene extends Phaser.Scene {
     window.isGameRunning = false;
     window.isTransitioning = false;
 
-    // Safe UI Helper (Cek ketersediaan scene)
+    // Safe UI Helper (Cek ketersediaan scene dengan benar)
     const safeSetVisible = (gameObject, visible) => {
-      if (!gameObject || !gameObject.scene || !gameObject.scene.sys || gameObject.scene.sys.isDestroyed || gameObject.active === false) {
-        return;
+      if (gameObject && gameObject.scene && gameObject.scene.sys && !gameObject.scene.sys.isDestroyed) {
         gameObject.setVisible(visible);
       }
     };
 
     const safeDisableInteractive = (gameObject) => {
-      if (!gameObject || !gameObject.scene || !gameObject.scene.sys || gameObject.scene.sys.isDestroyed || gameObject.input == null) {
-        //return;
+      if (gameObject && gameObject.scene && gameObject.scene.sys && !gameObject.scene.sys.isDestroyed && gameObject.input) {
         gameObject.disableInteractive();
       }
     };
-
+    
     try {
       if (!this.isSceneUsable()) return;
 
