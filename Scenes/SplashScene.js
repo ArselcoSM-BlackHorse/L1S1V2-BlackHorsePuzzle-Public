@@ -569,7 +569,7 @@ class SplashScene extends Phaser.Scene {
   }
     
 
-  async handleLevel01Click(email, level1Glow, btnBlue) {
+  async handleLevel01Click(emailArg, level1Glow, btnBlue) {
     if (this.isStartingLevel || this._isTransitioning) return; // Mencegah double-click
     this.isStartingLevel = true;
     this._isTransitioning = true;
@@ -578,19 +578,19 @@ class SplashScene extends Phaser.Scene {
     window.isGameRunning = false;
     window.isTransitioning = false;
 
-    // 2. Safe UI Helper (Cek ketersediaan scene)
+    // Safe UI Helper (Cek ketersediaan scene)
     const safeSetVisible = (gameObject, visible) => {
       if (!gameObject || !gameObject.scene || !gameObject.scene.sys || gameObject.scene.sys.isDestroyed || gameObject.active === false) {
-        return;
+        //return;
+        gameObject.setVisible(visible);
       }
-      gameObject.setVisible(visible);
     };
 
     const safeDisableInteractive = (gameObject) => {
       if (!gameObject || !gameObject.scene || !gameObject.scene.sys || gameObject.scene.sys.isDestroyed || gameObject.input == null) {
-        return;
+        //return;
+        gameObject.disableInteractive();
       }
-      gameObject.disableInteractive();
     };
 
     try {
@@ -600,10 +600,12 @@ class SplashScene extends Phaser.Scene {
       safeDisableInteractive(level1Glow);
       safeDisableInteractive(btnBlue);
 
-      // 3. Persiapkan Data & Progress Local
-      const email = localStorage.getItem("email");
+      // Pastikan Email Valid
+      const email = emailArg || localStorage.getItem("email");
       const localUserData = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}');
       const localProgress = localUserData.gameProgress || {};
+      
+      // Ambil State Progress Game
       const resolvedScore = this.registry.get('level01Score') ?? this.level01Score ?? localProgress.level01Score ?? 0;
       const resolvedRound = this.registry.get('round') ?? this.round ?? localProgress.round ?? 1;
       const resolvedStarAlpha = this.registry.get('starBronzeAlpha') ?? this.starBronzeAlpha ?? localProgress.starBronzeAlpha ?? 0;
@@ -627,28 +629,34 @@ class SplashScene extends Phaser.Scene {
       const resolvedSeries2BlockedNeedCandy = Number(localProgress.series2BlockedNeedCandy) || 0;
       const resolvedSeries2bhimbieUnlocked = localProgress.series2bhimbieUnlocked === true;
 
-      // ✅ 4. AUTO PAYMENT CHECK
+      // ✅ 2. AUTO PAYMENT CHECK
       console.log('🔍 Auto checking payment status for:', email);
-      const paymentData = await window.checkPaymentStatusFromBackend(email);
-      if (!this.isSceneUsable()) return;
-      
       let isPaidDetected = false;
 
-      if (paymentData && paymentData.isPaid === true) {
-        console.log('✅ Payment detected! Auto-unlocking game...');
-        isPaidDetected = true;
-
-        // Clear local game over state
-        localStorage.removeItem(`gameOver_${email}`);
       
-        // Update local storage user data
-        localUserData.isGameOver = false;
-        localUserData.isPaid = true;
-        localStorage.setItem(`gameData-${email}`, JSON.stringify(localUserData));
-      } else {
-        console.log('❌ No payment detected - using local preserved transition state');
-      }
+    
+      if (email) {
+        try {
+          const paymentData = await window.checkPaymentStatusFromBackend(email);  
+          if (paymentData && paymentData.isPaid === true) {
+          console.log('✅ Payment detected! Auto-unlocking game...');
+          isPaidDetected = true;
 
+          // Clear local game over state
+          localStorage.removeItem(`gameOver_${email}`);
+      
+          // Update local storage user data
+          localUserData.isGameOver = false;
+          localUserData.isPaid = true;
+          localStorage.setItem(`gameData-${email}`, JSON.stringify(localUserData));
+          } else {
+            console.log('❌ No payment detected - using local preserved transition state');
+          }
+        } catch (payErr) {
+        console.warn('⚠️ Payment check error, skipping backend check:', payErr);
+        }
+      }
+      
         /*// ✅ TAMBAHKAN UNLOCK LOGIC YANG LEBIH LENGKAP
         this.unblur10PuzzleButton();
         this.unlockGameAfterPurchase();
@@ -699,7 +707,10 @@ class SplashScene extends Phaser.Scene {
 
       console.log('❌ No payment detected - using local preserved transition state');*/
 
-      // 5. Susun Payload TransitionData Lengkap
+      // Pastikan Scene Splash masih aman digunakan sebelum pindah
+      if (!this.isSceneUsable()) return;
+      
+      // 3. Susun Payload TransitionData Lengkap
       const transitionData = {
         isGameOver: isPaidDetected ? false : !!(localUserData.lossUser || localUserData.isGameOver),
         isPaid: isPaidDetected,
@@ -729,11 +740,8 @@ class SplashScene extends Phaser.Scene {
 
       safeSetVisible(level1Glow, false);
       safeSetVisible(btnBlue, false);
-      //console.log('🎮 Proceeding to Level01Scene with preserved state only:', transitionData);
-      //this._isTransitioning = true;
-      //this.scene.start("Level01Scene", transitionData);
-
-      // 6. Matikan Event Timer Splash & Lakukan Perpindahan Scene Secara Bersih
+      
+      // 4. Matikan Event Timer Splash & Lakukan Perpindahan Scene Secara Bersih
       this.time?.removeAllEvents();
       this.tweens?.killAll();
 
@@ -741,9 +749,11 @@ class SplashScene extends Phaser.Scene {
     
       // 💡 EKSEKUSI PINDAH SCENE HANYA DI BAGIAN AKHIR SINI:
       this.scene.start("Level01Scene", transitionData);
-      this.scene.stop("SplashScene");
+      //this.scene.stop("SplashScene");
 
     } catch (error) {
+      console.error("❌ Error during level transition:", error);
+      // Reset flag pengunci jika terjadi kegagalan agar tombol dapat diklik ulang
       this._isTransitioning = false;
       this.isStartingLevel = false;
       if (this.isSceneUsable()) {
@@ -751,7 +761,7 @@ class SplashScene extends Phaser.Scene {
         safeSetVisible(btnBlue, false);
       }
       //alert("Failed to check user status: " + error.message);
-      console.error("❌ Failed to check user status:", error);
+      //console.error("❌ Failed to check user status:", error);
     }
   }
 
