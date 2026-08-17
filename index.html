@@ -680,28 +680,31 @@ window.checkPaymentStatus = async function(email) {
 // This function updates the game payment status and UI based on the payment state
 // ✅ ENHANCED GAME PAYMENT STATUS UPDATE WITH isPaid FLAG:
 window.updateGamePaymentStatus = function(isPaid, method = null, additionalData = {}) {
-    const email = localStorage.getItem("email");
-    if (!email) {
+  const scene = window.getLevel01SceneSafe?.();
+  
+  // ✏️ [PERBAIKAN 1]: Tambahkan pengecekan `scene.sys.isActive()` agar dipastikan scene murni aktif dan tidak sedang hancur/di-stop.
+  if (!scene || !scene.sys || !scene.sys.settings || !scene.sys.settings.active || (typeof scene.sys.isActive === 'function' && !scene.sys.isActive())) { 
+      console.log('⛔ Level01Scene not ready/destroyed. Skip UI update.'); 
+       return;
+  }
+  const email = localStorage.getItem("email");
+  if (!email) {
       console.error('❌ email not defined in updateGamePaymentStatus');
       return;
-    }
+  }
     
-    // ✅ EXPLICIT isPaid FLAG
-    const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
-    userData.isPaid = isPaid === true; // Pastikan boolean
-    userData.paymentMethod = method|| userData.paymentMethod;
-    userData.paymentVerified = isPaid === true;
-    userData.paymentDate = isPaid ? new Date().toISOString() : null;
-    if (additionalData.transactionId) userData.transactionId = additionalData.transactionId;
-    if (additionalData.amount != null) userData.paymentAmount = additionalData.amount;
-    localStorage.setItem(`gameData-${email}`, JSON.stringify(userData));
+  // ✅ EXPLICIT isPaid FLAG
+  const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
+  userData.isPaid = isPaid === true; // Pastikan boolean
+  userData.paymentMethod = method|| userData.paymentMethod;
+  userData.paymentVerified = isPaid === true;
+  userData.paymentDate = isPaid ? new Date().toISOString() : null;
+  if (additionalData.transactionId) userData.transactionId = additionalData.transactionId;
+  if (additionalData.amount != null) userData.paymentAmount = additionalData.amount;
+  localStorage.setItem(`gameData-${email}`, JSON.stringify(userData));
 
     // Flag global
   window.isPaid = isPaid === true;
-
-  // Sentuh scene aktif
-  //const scene = window.game?.scene?.getScene('Level01Scene');
-  //if (scene) scene.isPaid = isPaid === true;
 
   // ⛔ Jangan ubah UI jika masih dalam proses pembayaran
   const paying = localStorage.getItem('isPaying') === 'true';
@@ -711,32 +714,71 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
   }
 
   // ⛔ Hanya izinkan unlock jika verifikasi sesi ini sukses
-  if (isPaid === true && window.sessionPaymentOK !== true) {
+  if (isPaid === true && window.lossUser === false && window.sessionPaymentOK !== true) {
     console.log('🛡️ Block unlock: sessionPaymentOK=false (not this session)');
     return;
   }
 
-  // Drive UI
-  const scene = window.game?.scene?.getScene('Level01Scene');
+    if (isPaid === true && method === 'xsolla') {
+      try {
+        const email = localStorage.getItem('email');
+        const pendingCandyPurchase = JSON.parse(localStorage.getItem(`pendingCandyPurchase_${email}`) || 'null');
+        if (pendingCandyPurchase) {
+          const rewardId = additionalData.transactionId || String(pendingCandyPurchase.startedAt || Date.now());
+          const rewardKey = `rewardedCandyPurchase_${email}_${rewardId}`;
+          if (!localStorage.getItem(rewardKey)) {
+            const rewardCandy = Math.max(1, Number(pendingCandyPurchase.rewardCandy) || Math.round(Number(additionalData.amount) || 0));
+            scene.addCandy?.(rewardCandy, 'buyCandy');
+            scene.saveScorePersistent?.().catch(() => {});
+            localStorage.setItem(rewardKey, 'true');
+            localStorage.removeItem(`pendingCandyPurchase_${email}`);
+          }
+        }
+      } catch (rewardError) {
+        console.warn('⚠️ Failed to apply candy reward from Xsolla purchase:', rewardError);
+      }
+    }
 
-  // ✅ guard keras agar tidak akses Scene yang belum siap/ter-destroy
-if (!scene || !scene.sys || scene.sys.isDestroyed) {
-  console.log('⛔ Level01Scene not ready/destroyed. Skip UI update.');
-  return;
-}
-
+  // Update UI berdasarkan status pembayaran
   if (isPaid === true) {
     scene.hideGameLockMessage?.();
     scene.unblur10PuzzleButton?.(true);
     scene.unlockGameAfterPurchase?.(true);
     window.unlockPlayAndHideGameOver?.();
   } else {
+    // ✅ Jangan kunci untuk newUser/winUser. Kunci hanya untuk lossUser + gameOver.
+    let snap = {};
+    try { snap = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}'); } catch {}
+
+    const shouldLock = (snap.isGameOver === true) && (snap.lossUser === true);
+
+    if (shouldLock) {
     // Opsional: tetap kunci
     scene.blur10PuzzleButton?.();
     scene.lockAllGameplayButtons?.();
     // pastikan donasi juga terkunci
-    if (scene.donationBtn) { scene.donationBtn.disableInteractive(); scene.donationBtn.setAlpha(0.5); }
+    //if (scene.donationBtn) { scene.donationBtn.disableInteractive(); scene.donationBtn.setAlpha(0.5); }
+    // ✏️ [PERBAIKAN 2]: Tambahkan pengecekan `scene.donationBtn.scene` sebelum memanggil disableInteractive()
+    // Ini mencegah error "reading sys" saat objek tombol donasi sudah terhapus dari memory.
+    if (scene.donationBtn && scene.donationBtn.scene) { 
+      scene.donationBtn.disableInteractive(); 
+      scene.donationBtn.setAlpha(0.5); 
+    }
+
     window.lockPlayAndShowGameOver?.();
+  } else {
+      // newUser / winUser / tidak game over => pastikan terbuka
+      scene.hideGameLockMessage?.();
+      scene.unblur10PuzzleButton?.();
+      scene.unlockAllGameplayButtons?.();
+      // donation boleh tetap kamu atur sesuai desain; ini contoh dibuka:
+      //if (scene.donationBtn) { scene.donationBtn.setInteractive(); scene.donationBtn.setAlpha(1); }
+      // ✏️ [PERBAIKAN 3]: Tambahkan pengecekan `scene.donationBtn.scene` sebelum setInteractive()
+      if (scene.donationBtn && scene.donationBtn.scene) { 
+        scene.donationBtn.setInteractive(); 
+        scene.donationBtn.setAlpha(1); 
+      }
+    }
   }
 
   console.log('💳 Payment status updated:', {

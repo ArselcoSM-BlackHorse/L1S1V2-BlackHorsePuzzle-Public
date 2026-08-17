@@ -581,7 +581,7 @@ class SplashScene extends Phaser.Scene {
     // Safe UI Helper (Cek ketersediaan scene)
     const safeSetVisible = (gameObject, visible) => {
       if (!gameObject || !gameObject.scene || !gameObject.scene.sys || gameObject.scene.sys.isDestroyed || gameObject.active === false) {
-        //return;
+        return;
         gameObject.setVisible(visible);
       }
     };
@@ -1204,6 +1204,10 @@ async verifyEmailWithBackend(email) {
       this.lv01Puzzle10Btn.setInteractive();
       this.lv01Puzzle10Btn.setAlpha(1);
     }
+    if (this.lv01Puzzle20Btn) {
+    this.lv01Puzzle20Btn.setAlpha(1);
+    this.lv01Puzzle20Btn.setInteractive({ useHandCursor: true });
+  }
     console.log('✅ Semua tombol gameplay dibuka');
   }
 
@@ -1221,7 +1225,7 @@ async verifyEmailWithBackend(email) {
   }
 
   showGameOverReturnMessage() {
-    // alert("Game Over! Unlock with Black Horse's favorite menu");
+    console.log('💀 GAME OVER: Showing return message');
   }
 
   blur10PuzzleButton() {
@@ -2712,7 +2716,9 @@ window.checkUserStatusAndGameOver = async function(email) {
 // ✅ ENHANCED GAME PAYMENT STATUS UPDATE WITH isPaid FLAG:
 window.updateGamePaymentStatus = function(isPaid, method = null, additionalData = {}) {
   const scene = window.getLevel01SceneSafe?.();
-  if (!scene || !scene.sys || !scene.sys.settings || !scene.sys.settings.active) { 
+
+  // ✏️ [PERBAIKAN 1]: Tambahkan pengecekan `scene.sys.isActive()` agar dipastikan scene murni aktif dan tidak sedang hancur/di-stop.
+  if (!scene || !scene.sys || !scene.sys.settings || !scene.sys.settings.active || (typeof scene.sys.isActive === 'function' && !scene.sys.isActive())) { 
       console.log('⛔ Level01Scene not ready/destroyed. Skip UI update.'); 
        return;
   }
@@ -2722,15 +2728,15 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
       return;
   }
     
-    // ✅ EXPLICIT isPaid FLAG
-    const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
-    userData.isPaid = isPaid === true; // Pastikan boolean
-    userData.paymentMethod = method|| userData.paymentMethod;
-    userData.paymentVerified = isPaid === true;
-    userData.paymentDate = isPaid ? new Date().toISOString() : null;
-    if (additionalData.transactionId) userData.transactionId = additionalData.transactionId;
-    if (additionalData.amount != null) userData.paymentAmount = additionalData.amount;
-    localStorage.setItem(`gameData-${email}`, JSON.stringify(userData));
+  // ✅ EXPLICIT isPaid FLAG
+  const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
+  userData.isPaid = isPaid === true; // Pastikan boolean
+  userData.paymentMethod = method|| userData.paymentMethod;
+  userData.paymentVerified = isPaid === true;
+  userData.paymentDate = isPaid ? new Date().toISOString() : null;
+  if (additionalData.transactionId) userData.transactionId = additionalData.transactionId;
+  if (additionalData.amount != null) userData.paymentAmount = additionalData.amount;
+  localStorage.setItem(`gameData-${email}`, JSON.stringify(userData));
 
     // Flag global
   window.isPaid = isPaid === true;
@@ -2786,15 +2792,28 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
     scene.blur10PuzzleButton?.();
     scene.lockAllGameplayButtons?.();
     // pastikan donasi juga terkunci
-    if (scene.donationBtn) { scene.donationBtn.disableInteractive(); scene.donationBtn.setAlpha(0.5); }
+    //if (scene.donationBtn) { scene.donationBtn.disableInteractive(); scene.donationBtn.setAlpha(0.5); }
+    // ✏️ [PERBAIKAN 2]: Tambahkan pengecekan `scene.donationBtn.scene` sebelum memanggil disableInteractive()
+      // Ini mencegah error "reading sys" saat objek tombol donasi sudah terhapus dari memory.
+      if (scene.donationBtn && scene.donationBtn.scene) { 
+        scene.donationBtn.disableInteractive(); 
+        scene.donationBtn.setAlpha(0.5); 
+      }
+    
     window.lockPlayAndShowGameOver?.();
   } else {
       // newUser / winUser / tidak game over => pastikan terbuka
       scene.hideGameLockMessage?.();
       scene.unblur10PuzzleButton?.();
       scene.unlockAllGameplayButtons?.();
+
       // donation boleh tetap kamu atur sesuai desain; ini contoh dibuka:
-      if (scene.donationBtn) { scene.donationBtn.setInteractive(); scene.donationBtn.setAlpha(1); }
+      //if (scene.donationBtn) { scene.donationBtn.setInteractive(); scene.donationBtn.setAlpha(1); }
+      // ✏️ [PERBAIKAN 3]: Tambahkan pengecekan `scene.donationBtn.scene` sebelum setInteractive()
+      if (scene.donationBtn && scene.donationBtn.scene) { 
+        scene.donationBtn.setInteractive(); 
+        scene.donationBtn.setAlpha(1); 
+      }
     }
   }
 
