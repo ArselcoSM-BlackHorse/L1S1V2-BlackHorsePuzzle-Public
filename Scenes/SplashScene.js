@@ -138,14 +138,6 @@ class SplashScene extends Phaser.Scene {
     
     this.load.on('complete', () => {
       document.getElementById('loader').style.display = 'none';
-      /*
-      if (!localStorage.getItem("email")) {
-        document.getElementById("loginBox").style.display = "block";
-        document.getElementById("logoutBtn").style.display = "none";
-      } else {
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("logoutBtn").style.display = "inline-block";
-      }*/
       //this.syncAuthUI(!!localStorage.getItem("email"));
       this.syncAuthUI(localStorage.getItem("user_logged_in") === "true");
     });
@@ -318,9 +310,31 @@ class SplashScene extends Phaser.Scene {
       if (!this.isSceneUsable() || this._isTransitioning) return;
 
       this._isTransitioning = true;
-      //localStorage.removeItem("email");
-      localStorage.removeItem("user_logged_in");
 
+      // 🧹 1. Ambil email aktif saat ini untuk membersihkan cache lokal
+      const email = localStorage.getItem("email");
+      if (email) {
+        localStorage.removeItem(`gameOver_${email}`);
+        localStorage.removeItem(`gameData-${email}`);
+        localStorage.removeItem(`score_${email}`);
+        localStorage.removeItem(`gameHistory_${email}`);
+      }
+
+      // 🧹 2. Hapus status login utama di localStorage
+      localStorage.removeItem("email");
+      localStorage.removeItem("user_logged_in");
+      localStorage.removeItem("isPaying");
+      localStorage.removeItem("sessionPaymentOK");
+
+      // 🧹 3. Reset variabel global Phaser di RAM
+      window.isPaid = false;
+      window.sessionPaymentOK = false;
+      window.lossUser = false;
+      window.winUser = false;
+      window.level01Score = 0;
+      window.playerScore = 0;
+
+      // 🧹 4. Bersihkan Form Input UI
       const emailInput = document.getElementById("emailInput");
       const verificationCodeInput = document.getElementById("verificationCodeInput");
       if (emailInput) emailInput.value = "";
@@ -333,6 +347,9 @@ class SplashScene extends Phaser.Scene {
       }
 
       this._isTransitioning = false;
+
+      // 🔄 5. Reload ringan agar semua state memori benar-benar bersih total
+      window.location.reload();
     };
   }
 

@@ -301,9 +301,27 @@ class Level02Scene extends Phaser.Scene {
           } catch (error) {
             console.warn('❌ Error saving before logout:', error);
           }
+        
+          // 🧹 1. BERSIHKAN CACHE USER LAMA
+          localStorage.removeItem(`gameOver_${email}`);
+          localStorage.removeItem(`gameData-${email}`);
+          localStorage.removeItem(`score_${email}`);
+          localStorage.removeItem(`gameHistory_${email}`);
         }
 
+        // 🧹 2. HAPUS EMAIL & STATUS LOGIN
+        localStorage.removeItem("email"); // 👈 PENTING!
         localStorage.removeItem("user_logged_in");
+        localStorage.removeItem("isPaying");
+        localStorage.removeItem("sessionPaymentOK");
+
+        // 🧹 3. RESET VARIABEL GLOBAL
+        window.isPaid = false;
+        window.sessionPaymentOK = false;
+        window.lossUser = false;
+        window.winUser = false;
+        window.level01Score = 0;
+        window.playerScore = 0;
 
         const emailInput = document.getElementById("emailInput");
         const verificationCodeInput = document.getElementById("verificationCodeInput");
