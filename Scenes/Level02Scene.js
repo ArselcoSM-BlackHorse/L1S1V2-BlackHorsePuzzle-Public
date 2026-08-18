@@ -153,6 +153,10 @@ class Level02Scene extends Phaser.Scene {
   preload() {
     document.getElementById('loader').style.display = 'flex';
 
+    if (window.GameLoad && typeof window.GameLoad.preloadAllAssets === 'function') {
+      window.GameLoad.preloadAllAssets(this); 
+    }
+
     this.load.image('board', './Puzzle-Assets/Level02/Bord Game Puzzle Level-02.webp');
     this.load.image('donationPanel', `${window.BACKEND_URL}/assets/UI/Black_Horse_Donation_Panel.png`);
     this.load.on('filecomplete-image-donationPanel', () => {
@@ -170,6 +174,11 @@ class Level02Scene extends Phaser.Scene {
       document.getElementById('loader').style.display = 'none';
       this.syncAuthUI(localStorage.getItem('user_logged_in') === 'true');
     });
+
+    // 🔥 PERBAIKAN: Jika semua aset sudah ada di cache dari SplashScene, langsung tutup loader!
+    if (!this.load.isLoading()) {
+      document.getElementById('loader').style.display = 'none';
+    }
   }
 
   create(data = {}) {

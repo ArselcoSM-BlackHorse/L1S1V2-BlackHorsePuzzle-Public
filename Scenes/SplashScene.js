@@ -135,10 +135,14 @@ class SplashScene extends Phaser.Scene {
       frameWidth: 750, frameHeight: 750
     });
     this.load.image("dust", "./Puzzle-Assets/Splash/Grain Dust.webp");
+
+    // 🔥 PERBAIKAN: Muat seluruh aset GameLoad saat pemain berada di SplashScene!
+    if (window.GameLoad && typeof window.GameLoad.preloadAllAssets === 'function') {
+      window.GameLoad.preloadAllAssets(this);
+    }
     
     this.load.on('complete', () => {
       document.getElementById('loader').style.display = 'none';
-      //this.syncAuthUI(!!localStorage.getItem("email"));
       this.syncAuthUI(localStorage.getItem("user_logged_in") === "true");
     });
   }
