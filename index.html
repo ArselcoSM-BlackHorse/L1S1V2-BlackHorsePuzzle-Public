@@ -131,9 +131,9 @@
         color: #c7f6ff;
       }
 
-      body.level02-mode #loader {
+      /* body.level02-mode #loader {
         background: #053339;
-      }
+      } */
 
       canvas {
         display: block;
@@ -1093,21 +1093,29 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
   <div id="game-container"></div>
 
    <!-- 🐎 Loading Screen -->
-<div id="loader" style="
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: #000000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  font-family: 'Segoe UI', sans-serif;
-  font-size: 1.4em;
-  letter-spacing: 1px;
-">
-  <div>Please Wait...</div>
-</div>
+  <div id="loader" style="
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: #000000 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 999999 !important;
+  ">
+    <h1 style="
+      color: #ffffff !important;
+      font-family: 'Segoe UI', Arial, sans-serif !important;
+      font-size: 1.8em !important;
+      font-weight: 600 !important;
+      letter-spacing: 2px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      text-align: center !important;
+    ">Please Wait...</h1>
+  </div>
 
   <!-- ✅ SINGLE LOGOUT BUTTON - PROPER PLACEMENT -->
       <button id="logoutBtn" style="display:none; position: fixed; top: 18px; right: 32px; z-index: 99999;background: #053339; color: #fff; border: 1px solid #00eaff; border-radius: 7px; padding: 7px 16px; font-size: 0.95em; cursor: pointer; box-shadow: 0 0 8px #00eaff60; pointer-events: auto;">
