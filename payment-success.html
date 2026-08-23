@@ -64,7 +64,7 @@
     token,
     payerID,
     email
-  }, { timeout: 200000 })
+  }, { timeout: 90000 })
     .then(res => {
       const data = res.data;
       if (data.emailVerified) {
@@ -99,7 +99,7 @@ window.checkPaymentStatusFromBackend = async function(email) {
     const res = await axios.post(
       `${window.BACKEND_URL}/api/payments/${encodeURIComponent(email)}/payment-status`,
       {},
-      { timeout: 200000 }
+      { timeout: 90000 }
     );
 
     const data = res.data;
@@ -152,7 +152,7 @@ window.checkPaymentStatusFromBackend = async function(email) {
 // ** VERIFY-PAYMENT**
 axios.get(`${window.BACKEND_URL}/api/verify-payment`, {
       params: { txnId, email },
-      timeout: 200000,
+      timeout: 90000,
       headers: { 'Accept': 'application/json' }
       })
       .then(res => {
@@ -189,7 +189,7 @@ axios.get(`${window.BACKEND_URL}/api/verify-payment`, {
 axios.post(`${window.BACKEND_URL}/api/verify-paypal`, {
   paypalOrderId,
   email
-}, { timeout: 200000 })
+}, { timeout: 90000 })
 .then(res => {
   const data = res.data;
   if (data.emailVerified&& data.status === 'COMPLETED') {
@@ -248,8 +248,8 @@ async function handlePaymentSuccess(email) {
     // Axios timeout pakai config
     const response = await axios.post(
       `${window.BACKEND_URL}/api/verify-paypal`,
-      { paypalOrderId, email },
-      { timeout: 200000 }
+      { orderId, email },
+      { timeout: 90000 }
     );
 
     const data = response.data;

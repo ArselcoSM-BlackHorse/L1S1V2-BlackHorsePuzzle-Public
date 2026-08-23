@@ -55,23 +55,80 @@ class Level02Scene extends Phaser.Scene {
   }
 
   restoreProgressFromCacheEarly(email) {
-    try {
-      const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
-      const gp = userData.gameProgress || {};
-      if (Number(gp.selectedSeries) === 1 || Number(gp.selectedSeries) === 2) this.selectedSeries = Number(gp.selectedSeries);
-      if (typeof gp.round === 'number' && gp.round >= 1) this.round = gp.round;
-      if (typeof gp.starBronzeAlpha === 'number') this.starBronzeAlpha = gp.starBronzeAlpha;
-      if (typeof gp.starSilverBlackHorseAlpha === 'number') this.starSilverAlpha = gp.starSilverBlackHorseAlpha;
-      if (typeof gp.level01Score === 'number') this.level01Score = gp.level01Score;
-      this.applyPersistedSeries2State(gp);
-      this.registry.set('selectedSeries', this.selectedSeries ?? null);
-      this.registry.set('round', this.round || 1);
-      this.registry.set('starBronzeAlpha', this.starBronzeAlpha || 0);
-      this.registry.set('starSilverBlackHorseAlpha', this.starSilverAlpha || 0);
-      this.registry.set('level01Score', this.level01Score || 0);
-      console.log('🗂️ Early restore from cache:', { selectedSeries: this.selectedSeries, round: this.round, starBronzeAlpha: this.starBronzeAlpha, starSilverBlackHorseAlpha: this.starSilverAlpha, score: this.level01Score });
+  try {
+    const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
+    const gp = userData.gameProgress || {};
+    const allowSeriesRestore = this._skipSeriesSelectionRestore !== true;
+    
+    if (allowSeriesRestore && (Number(gp.selectedSeries) === 1 || Number(gp.selectedSeries) === 2)) {
+      this.selectedSeries = Number(gp.selectedSeries);
+      this.selectedPuzzleCount = this.selectedSeries === 2 ? 20 : 10;
+    }
+    if (gp.seriesScores && typeof gp.seriesScores === 'object') {
+      this.seriesScores = {
+        1: Number(gp.seriesScores[1]) || 0,
+        2: Number(gp.seriesScores[2]) || 0,
+      };
+      this.level01Score = (Number(this.seriesScores[1]) || 0) + (Number(this.seriesScores[2]) || 0);
+    }
+
+    if (gp.series2BagClosedActive !== undefined) {
+      this.series2BagClosedActive = gp.series2BagClosedActive;
+    } else {
+      this.series2BagClosedActive = true; // Fallback default untuk Series 2
+    }
+
+    if (typeof gp.round === 'number' && gp.round >= 1) this.round = gp.round;
+    if (typeof gp.starBronzeAlpha === 'number') this.starBronzeAlpha = gp.starBronzeAlpha;
+    if (typeof gp.starSilverBlackHorseAlpha === 'number') this.starSilverAlpha = gp.starSilverBlackHorseAlpha;
+    if (typeof gp.starAwarded === 'boolean') this.starAwarded = gp.starAwarded;
+    if (typeof gp.level01Score === 'number' && !(gp.seriesScores && typeof gp.seriesScores === 'object')) this.level01Score = gp.level01Score;
+    if (typeof gp.claimedCandyCapacity === 'number') this.claimedCandyCapacity = gp.claimedCandyCapacity;
+    this.applyPersistedCandyLedger?.(gp);
+    if (typeof gp.scoreCandy === 'number') this.scoreCandy = gp.scoreCandy;
+    if (typeof gp.buyCandy === 'number') this.buyCandy = gp.buyCandy;
+    if (typeof gp.candyCount === 'number') this.candyCount = gp.candyCount;
+    if (typeof gp.series2Blocked === 'boolean') this._series2Blocked = gp.series2Blocked;
+    if (typeof gp.series2BlockCount === 'number') this.series2BlockCount = gp.series2BlockCount;
+    if (typeof gp.series2BlockedNeedCandy === 'number') this.series2BlockedNeedCandy = gp.series2BlockedNeedCandy;
+    if (typeof gp.series2bhimbieUnlocked === 'boolean') this.series2bhimbieUnlocked = gp.series2bhimbieUnlocked;
+    
+    this.applyPersistedSeries2PenaltyState?.(gp);
+    this.syncSeriesScoreDetailFallback?.();
+    this.syncCandyBalances?.();
+    
+    // registry untuk dibaca tempat lain
+    this.registry.set('round', this.round || 1);
+    this.registry.set('starBronzeAlpha', this.starBronzeAlpha || 0);
+    this.registry.set('starSilverBlackHorseAlpha', this.starSilverAlpha || 0);
+    this.registry.set('starAwarded', this.starAwarded === true);
+    this.registry.set('level01Score', this.level01Score || 0);
+    
+    if (typeof this.candyCount === 'number') {
+      this.registry.set('candyCount', this.candyCount);
+    }
+
+    // =========================================================================
+    // 🛡️ OVERRIDE GAME OVER STATE SINKRON WITH LOCALSTORAGE
+    // =========================================================================
+    const userEmail = email || localStorage.getItem('email');
+    const isLockedFromStorage = userEmail && localStorage.getItem(`gameOver_${userEmail}`) === 'true';
+    
+    if (gp.isGameOver === true || userData.isGameOver === true || userData.lossUser === true || isLockedFromStorage) {
+      this.isGameOver = true;
+      this.isGameOverBlocked = true;
+      this.lossUser = true;
+      this.level01Score = 0; // Paksa skor tetap 0
+      this.registry.set('level01Score', 0); // Update registry agar sinkron
+      this.registry.set('isGameOver', true);
+      console.warn('🛡️[GAME OVER LOCK] Ditemukan status Game Over permanen saat Reload!');
+     
+      // 💡 JANGAN panggil UI di sini, cukup tandai flag pending agar dipanggil saat create() selesai
+      this.pendingGameOverMessage = true;
+    }
+    console.log('🗂️ Early restore from cache:', { round: this.round, starBronzeAlpha: this.starBronzeAlpha, starSilverAlpha: this.starSilverAlpha, score: this.level01Score });
     } catch (_) {
-      // ignore
+    // ignore
     }
   }
 
@@ -222,6 +279,11 @@ class Level02Scene extends Phaser.Scene {
       window.level01Score = data.level01Score;
       this.registry.set('level01Score', data.level01Score);
       console.log(`🔄 Score preserved from scene transition: ${data.level01Score}`);
+    }
+
+    // Di dalam create() Level02Scene
+    if (this.selectedSeries === 2) {
+        this.showSeries2BagTopOverlay?.(true);
     }
 
     if (email) {
@@ -1024,7 +1086,7 @@ class Level02Scene extends Phaser.Scene {
           completionTime,
           isPerfectGame
         },
-        { timeout: 200000 }
+        { timeout: 20000 }
       );
 
       return {

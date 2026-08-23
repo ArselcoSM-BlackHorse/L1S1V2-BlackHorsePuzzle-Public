@@ -1794,7 +1794,7 @@ async verifyEmailWithBackend(email) {
         amount,
         message
       },
-      { timeout: 200000 }
+      { timeout: 90000 }
     );
     const data = response.data;
     if (data.success && data.paypalOrderId && data.approvalUrl) {
@@ -1820,7 +1820,7 @@ async verifyEmailWithBackend(email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/paypal/capture-order/${paypalOrderId}`,
       { email },
-      { timeout: 200000 }
+      { timeout: 90000 }
     );
     const data = response.data;
     if (data.success && data.paypalOrderId === paypalOrderId) {
@@ -1860,7 +1860,7 @@ async verifyEmailWithBackend(email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/paypal/verify-paypal-token`,
       { token, payerID, email },
-      { timeout: 200000 } // timeout dalam ms
+      { timeout: 90000 } // timeout dalam ms
     );
 
     const data = response.data;
@@ -2001,9 +2001,10 @@ window.syncProgressFromBackend = async (email) => {
       {
         email,
         level: 'Level01Scene',
+        series2BagClosedActive: localProgress.series2BagClosedActive ?? true,
         localProgress: localProgress
       },
-      { timeout: 200000 }
+      { timeout: 20000 }
     );
   
      // ✅ STEP 3: Ambil data dari backend (PRIORITAS UTAMA)
@@ -2084,23 +2085,32 @@ window.syncProgressFromBackend = async (email) => {
       pickLatestNumber('level01Score', 0);
     const level01Score = mergedLevel01Score;  
 
-      // ✅ STEP 3: BACA DATA PENTING DARI BACKEND & LOCALSTORAGE
-    const userStatus = {
-      newUser: totalPlays === 0 && !isGameOverSaved && round === 1 && level01Score === 0,
-      winUser: level01Score > 0,
-      lossUser: isGameOverSaved || (round >= 3 && level01Score === 0) || (totalPlays >= 3 && level01Score === 0)
-    };
-    // 3. Ekstrak variabel agar bisa dipakai di baris-baris bawahnya
-    const newUser = userStatus.newUser;
-    const winUser = userStatus.winUser;
-    const lossUser = userStatus.lossUser;
+   // ✅ STEP 3: BACA DATA PENTING DARI BACKEND & LOCALSTORAGE (KLASIFIKASI KORAKSI)
+    const isPaidUser = backendData?.isPaid === true || progress?.isPaid === true || localProgress?.isPaid === true;
 
-    console.log(`👤 Backend user classification: newUser=${userStatus.newUser}, winUser=${userStatus.winUser}, lossUser=${userStatus.lossUser}`);
-    
-    // 💡 [TAMBAHAN BARU]: Jika sync mendeteksi LossUser, matikan akses sessionPaymentOK
+    // LossUser HANYA JIKA Game Over / Gagal DAN belum membayar (Paid)
+    const lossUser = (isGameOverSaved || (round >= 3 && level01Score === 0) || (totalPlays >= 3 && level01Score === 0)) && !isPaidUser;
+
+    // WinUser HANYA JIKA TIDAK LossUser DAN pernah mendapat skor > 0
+    const winUser = !lossUser && (level01Score > 0);
+
+    // NewUser HANYA JIKA pemain benar-benar belum pernah main, belum pernah skor, dan bukan LossUser
+    const newUser = !winUser && !lossUser && (totalPlays === 0 && !isGameOverSaved && round === 1 && level01Score === 0);
+
+    const userStatus = { newUser, winUser, lossUser };
+
+    console.log(`👤 Backend user classification (Corrected): newUser=${newUser}, winUser=${winUser}, lossUser=${lossUser}`);
+
+    // 💡 UPDATE GLOBAL STATE PLAYER
     if (lossUser) {
       window.sessionPaymentOK = false;
+      window.lossUser = true;
+      window.winUser = false;
       console.log('⛔ [Sync] LossUser detected! Resetting window.sessionPaymentOK to false');
+    } else {
+      window.lossUser = false;
+      window.winUser = winUser;
+      if (isPaidUser) window.sessionPaymentOK = true;
     }
 
     // ✅ STEP 4: HITUNG VARIABEL SISA
@@ -2130,6 +2140,7 @@ window.syncProgressFromBackend = async (email) => {
     const totalAttempts = pickLatestNumber('totalAttempts', 0);
     const starBronzeAlpha = pickLatestNumber('starBronzeAlpha', 0);
     const starAwarded = pickLatestBoolean('starAwarded', false);
+    const series2BagClosedActive = pickLatestBoolean('series2BagClosedActive', true);
     const starBronzeBlackHorseAlpha = pickLatestNumber('starBronzeBlackHorseAlpha', 0);
     const gameOvers = backendData.gameOvers || 0;
     const lastPlayedDate = backendData.lastPlayedDate || null;
@@ -2141,6 +2152,7 @@ window.syncProgressFromBackend = async (email) => {
       isGameOver: isGameOver,
       gameOvers,
       totalPlays,
+      series2BagClosedActive,
       round,
       claimedCandyCapacity,
       scoreCandy,
@@ -2208,6 +2220,7 @@ window.syncProgressFromBackend = async (email) => {
       round: round,
       starBronzeAlpha: starBronzeAlpha,
       starAwarded: starAwarded,
+      series2BagClosedActive,
       starBronzeBlackHorseAlpha: starBronzeBlackHorseAlpha,
       bestTime: bestTime,
       levelCompleted: level01Completed,
@@ -2227,6 +2240,7 @@ window.syncProgressFromBackend = async (email) => {
     window.starBronzeBlackHorseAlpha = starBronzeBlackHorseAlpha || 0;
     window.starBronzeAlpha = starBronzeAlpha || 0;
     window.starAwarded = starAwarded || false;
+    window.series2BagClosedActive = series2BagClosedActive || true;
     window.round = round || 1;
     window.totalPlays = totalPlays || 0;
     window.level01Completed = level01Completed || false;
@@ -2273,16 +2287,16 @@ window.syncProgressFromBackend = async (email) => {
       success: false,
       error: err.message
     };
-  }  
+   }  
   }
- 
+
 // 5) GET USER STATUS (DATA-ONLY) — TIDAK MENYENTUH UI
 window.getUserStatus = async function(email, level = 'Level01Scene') {
   try {
     const { data } = await axios.post(
       `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/status`,
       { email: String(email || '').toLowerCase().trim(), level },
-      { timeout: 200000 }
+      { timeout: 20000 }
     );
 
     console.log('👤 User status from backend:', data);
@@ -2377,7 +2391,7 @@ window.checkUserStatusAndGameOver = async function(email) {
     const response = await axios.post(
       `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/set-gameover`,
       { email, isGameOver },
-      { timeout: 200000 }
+      { timeout: 20000 }
     );
 
     // ✅ UPDATE LOCALSTORAGE DENGAN STATUS DARI BACKEND RESPONSE
@@ -2469,7 +2483,7 @@ window.checkUserStatusAndGameOver = async function(email) {
     const { data } = await axios.post(
       `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/gameover`,
       { email, level: 'Level01Scene' },
-      { timeout: 200000 }
+      { timeout: 20000 }
     );
 
     console.log('🎮 GameOver status from backend:', data);
@@ -2599,7 +2613,7 @@ window.checkUserStatusAndGameOver = async function(email) {
       const res = await axios.post(
         `${(window.BACKEND_URL||'').trim().replace(/\/+$/,'')}/api/${encodeURIComponent(email)}/payment-status`,
         {},
-        { timeout: 200000 }
+        { timeout: 90000 }
       );
       const data = res.data;
       console.log('💳 Payment status response:', data);
@@ -2850,7 +2864,7 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
       const res = await axios.post(
         `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/lock`,
         { email, level },
-        { timeout: 200000 }
+        { timeout: 20000 }
       );
       if (res.data.success) {
         this.isGameOver = true;
@@ -2897,7 +2911,7 @@ window.updateGamePaymentStatus = function(isPaid, method = null, additionalData 
     const unlockRes = await axios.post(
       `${base}/api/users/unlock`,
       { email, level: 'Level01Scene', isPaid: true },
-      { timeout: 200000 }
+      { timeout: 20000 }
     );
 
     console.log('🔓 Unlock level response:', unlockRes.data);

@@ -587,7 +587,7 @@ window.checkPaymentStatusFromBackend = async function(email) {
     const res = await axios.post(
       `${window.BACKEND_URL}/api/${encodeURIComponent(email)}/payment-status`,
       { }, // Send email in POST body
-      {timeout: 200000}
+      {timeout: 90000}
     );
     const data = res.data;
     console.log('💳 Payment status response:', data);
@@ -1250,8 +1250,8 @@ window.addEventListener('beforeunload', () => {
 });
 
 // Tambahkan di index.html, sebelum dipakai
-window.syncProgressFromBackend = async function(email) {
- try {
+window.syncProgressFromBackend = async (email) => {
+  try {
     console.log('🔄 Syncing progress from backend for:', email);
     const localData = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}') || {};
     const localProgress = localData.gameProgress || {};
@@ -1261,9 +1261,10 @@ window.syncProgressFromBackend = async function(email) {
       {
         email,
         level: 'Level01Scene',
+        series2BagClosedActive: localProgress.series2BagClosedActive ?? true,
         localProgress: localProgress
       },
-      { timeout: 200000 }
+      { timeout: 20000 }
     );
   
      // ✅ STEP 3: Ambil data dari backend (PRIORITAS UTAMA)
@@ -1344,23 +1345,32 @@ window.syncProgressFromBackend = async function(email) {
       pickLatestNumber('level01Score', 0);
     const level01Score = mergedLevel01Score;  
 
-      // ✅ STEP 3: BACA DATA PENTING DARI BACKEND & LOCALSTORAGE
-    const userStatus = {
-      newUser: totalPlays === 0 && !isGameOverSaved && round === 1 && level01Score === 0,
-      winUser: level01Score > 0,
-      lossUser: isGameOverSaved || (round >= 3 && level01Score === 0) || (totalPlays >= 3 && level01Score === 0)
-    };
-    // 3. Ekstrak variabel agar bisa dipakai di baris-baris bawahnya
-    const newUser = userStatus.newUser;
-    const winUser = userStatus.winUser;
-    const lossUser = userStatus.lossUser;
+   // ✅ STEP 3: BACA DATA PENTING DARI BACKEND & LOCALSTORAGE (KLASIFIKASI KORAKSI)
+    const isPaidUser = backendData?.isPaid === true || progress?.isPaid === true || localProgress?.isPaid === true;
 
-    console.log(`👤 Backend user classification: newUser=${userStatus.newUser}, winUser=${userStatus.winUser}, lossUser=${userStatus.lossUser}`);
-    
-    // 💡 [TAMBAHAN BARU]: Jika sync mendeteksi LossUser, matikan akses sessionPaymentOK
+    // LossUser HANYA JIKA Game Over / Gagal DAN belum membayar (Paid)
+    const lossUser = (isGameOverSaved || (round >= 3 && level01Score === 0) || (totalPlays >= 3 && level01Score === 0)) && !isPaidUser;
+
+    // WinUser HANYA JIKA TIDAK LossUser DAN pernah mendapat skor > 0
+    const winUser = !lossUser && (level01Score > 0);
+
+    // NewUser HANYA JIKA pemain benar-benar belum pernah main, belum pernah skor, dan bukan LossUser
+    const newUser = !winUser && !lossUser && (totalPlays === 0 && !isGameOverSaved && round === 1 && level01Score === 0);
+
+    const userStatus = { newUser, winUser, lossUser };
+
+    console.log(`👤 Backend user classification (Corrected): newUser=${newUser}, winUser=${winUser}, lossUser=${lossUser}`);
+
+    // 💡 UPDATE GLOBAL STATE PLAYER
     if (lossUser) {
       window.sessionPaymentOK = false;
+      window.lossUser = true;
+      window.winUser = false;
       console.log('⛔ [Sync] LossUser detected! Resetting window.sessionPaymentOK to false');
+    } else {
+      window.lossUser = false;
+      window.winUser = winUser;
+      if (isPaidUser) window.sessionPaymentOK = true;
     }
 
     // ✅ STEP 4: HITUNG VARIABEL SISA
@@ -1390,6 +1400,7 @@ window.syncProgressFromBackend = async function(email) {
     const totalAttempts = pickLatestNumber('totalAttempts', 0);
     const starBronzeAlpha = pickLatestNumber('starBronzeAlpha', 0);
     const starAwarded = pickLatestBoolean('starAwarded', false);
+    const series2BagClosedActive = pickLatestBoolean('series2BagClosedActive', true);
     const starBronzeBlackHorseAlpha = pickLatestNumber('starBronzeBlackHorseAlpha', 0);
     const gameOvers = backendData.gameOvers || 0;
     const lastPlayedDate = backendData.lastPlayedDate || null;
@@ -1401,6 +1412,7 @@ window.syncProgressFromBackend = async function(email) {
       isGameOver: isGameOver,
       gameOvers,
       totalPlays,
+      series2BagClosedActive,
       round,
       claimedCandyCapacity,
       scoreCandy,
@@ -1468,6 +1480,7 @@ window.syncProgressFromBackend = async function(email) {
       round: round,
       starBronzeAlpha: starBronzeAlpha,
       starAwarded: starAwarded,
+      series2BagClosedActive,
       starBronzeBlackHorseAlpha: starBronzeBlackHorseAlpha,
       bestTime: bestTime,
       levelCompleted: level01Completed,
@@ -1487,6 +1500,7 @@ window.syncProgressFromBackend = async function(email) {
     window.starBronzeBlackHorseAlpha = starBronzeBlackHorseAlpha || 0;
     window.starBronzeAlpha = starBronzeAlpha || 0;
     window.starAwarded = starAwarded || false;
+    window.series2BagClosedActive = series2BagClosedActive || true;
     window.round = round || 1;
     window.totalPlays = totalPlays || 0;
     window.level01Completed = level01Completed || false;
@@ -1533,8 +1547,9 @@ window.syncProgressFromBackend = async function(email) {
       success: false,
       error: err.message
     };
-  }  
+   }  
   }
+
 //=================================== BATAS SENDBEACON ====================================
 
 document.addEventListener('visibilitychange', () => {
@@ -1819,7 +1834,7 @@ async function registerUser(email) {
   const response = await axios.post(
     `${window.BACKEND_URL}/api/users/register`,
     { email: email.toLowerCase().trim() },
-    { timeout: 200000 }
+    { timeout: 20000 }
   );
   const data = response.data;
   console.log('✅ Backend email verification successful:', data.message);
@@ -1900,7 +1915,7 @@ try {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/users/verify-email`,
       { email, verificationCode: code },
-      { timeout: 200000 }
+      { timeout: 20000 }
     );
     const data = response.data;
     console.log('✅ Email verification response:', data);
@@ -1947,7 +1962,7 @@ async function checkEmailVerifiedFromBackend(email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/users/check-email`,
       { email: email},
-      { timeout: 200000 }
+      { timeout: 20000 }
     );
     return response.data && response.data.emailVerified === true;
   } catch (error) {
@@ -1978,7 +1993,7 @@ window.resendVerificationEmail = async function(email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/users/resend-verification`,
       { email },
-      { timeout: 200000 }
+      { timeout: 20000 }
     );
     const data = response.data;
     if (data.success) {
@@ -2427,7 +2442,7 @@ async function createPayPalOrder(email, amount, message = 'Black Horse Puzzle Su
         amount,
         message
       },
-      { timeout: 200000 }
+      { timeout: 90000 }
     );
     const data = response.data;
     if (data.success && data.paypalOrderId && data.approvalUrl) {
@@ -2453,7 +2468,7 @@ async function capturePayPalOrder(paypalOrderId, email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/capture-order/${paypalOrderId}`,
       { email },
-      { timeout: 200000 }
+      { timeout: 90000 }
     );
     const data = response.data;
     if (data.success && data.paypalOrderId === paypalOrderId) {
@@ -2493,7 +2508,7 @@ async function verifyPayPalToken(token, payerID, email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/verify-paypal-token`,
       { token, payerID, email },
-      { timeout: 200000 } // timeout dalam ms
+      { timeout: 90000 } // timeout dalam ms
     );
 
     const data = response.data;
@@ -2523,7 +2538,7 @@ async function verifyPayPalOrder(orderId, email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/verify-paypal`,
       {paypalOrderId: orderId, email },
-      { timeout: 200000 }
+      { timeout: 90000 }
     );
 
     const data = response.data;
