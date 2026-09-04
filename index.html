@@ -908,12 +908,36 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
   if (entranceGameBtn) {
     entranceGameBtn.onclick = function() {
       console.log('✅ Tombol entrance diklik');
-      document.getElementById('landingOverlay').style.display = 'none';
+
+      /*document.getElementById('landingOverlay').style.display = 'none';
       document.getElementById('loginBox').style.display = 'block';
       window.sessionStorage.setItem('bhpWarningShown', '1');
       const loader = document.getElementById('loader');
       if (loader) loader.style.display = 'none';
+      */
+      const landingOverlay = document.getElementById('landingOverlay');
+      const loginBox = document.getElementById('loginBox');
+      const loader = document.getElementById('loader');
+
+      if (landingOverlay) landingOverlay.style.display = 'none';
+
+      if (loginBox) {
+        loginBox.classList.remove('hidden');
+        if (window.setLoginBoxVisibility) {
+          window.setLoginBoxVisibility(true);
+        } else {
+          loginBox.style.display = 'block';
+          loginBox.style.visibility = 'visible';
+          loginBox.style.opacity = '1';
+          loginBox.style.pointerEvents = 'auto';
+        }
+      }
+
+      window.sessionStorage.setItem('bhpWarningShown', '1');
+
+      if (loader) loader.style.display = 'none';
     };
+    
   } else {
     console.error('❌ Tombol entrance tidak ditemukan!');
   }
@@ -1799,7 +1823,7 @@ let paymentCheckInterval = null;
   window.addScrollToCanvas();
 
   // ✅ ENHANCED LOGIN BUTTON WITH level01Score MANAGEMENT: WITH LAZY LOAD 
-// ✅ ENHANCED LOGIN HANDLER: ------ Mulai login handler ------------------- 
+  // ✅ ENHANCED LOGIN HANDLER: ------ Mulai login handler ------------------- 
   document.getElementById("loginBtn").onclick = async function(event) {
   event.preventDefault();
   event.stopPropagation();
@@ -1885,12 +1909,13 @@ try {
     document.getElementById("verifyBtn").style.display = "inline-block";
     console.log('✅ Verification box displayed');
   } catch (error) {
-    if (error.response && error.response.data) {
-      const errorData = error.response.data;
-    }
-   // if (window.hidePleaseWaitMessage) hidePleaseWaitMessage();
-   // console.error('❌ Login error:', error.message);
-   // alert('Login Error: ' + error.message);
+    const backendMessage =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Login failed. Please try again.";
+
+    console.error('❌ Login error:', backendMessage);
+    alert("Login failed. Please try again.");
   } finally {
     setTimeout(() => {
       loginBtn.disabled = false;
@@ -2327,7 +2352,7 @@ window.addEventListener('DOMContentLoaded', async function() {
 // async function handleScoreStatus(inputEmail, scoreStatus) { DIHAPUS KARENA MEMANGGIL UPDATEGAMESCORE YG SUDAH DIHAPUS YG DIPAKAI UPDATEUSERPROGRESS
 
         
-        
+/*        
 if (window.Phaser && window.game && window.game.scene) {
     //window.game.scene.start(`${window.BACKEND_URL}/Scenes/SplashScene.js`); //dari Level01Scene ganti ke SplashScene 
      window.game.scene.start("SplashScene"); // ✅ BENAR
@@ -2341,7 +2366,7 @@ if (window.Phaser && window.game && window.game.scene) {
   
       console.log('✅ Enhanced login complete');
      alert("Login failed. Please try again.");
-    }
+    }*/
 
 
   // ✅ ENHANCED LOGOUT BUTTON:
@@ -2396,8 +2421,6 @@ if (window.Phaser && window.game && window.game.scene) {
       }
       
       setTimeout(() => {
-        //if (window.Phaser && window.game && window.game.scene) {
-        //window.game.scene.start(`${window.BACKEND_URL}/Scenes/SplashScene.js`);
         window.game.scene.start("SplashScene"); // ✅ BENAR
       }, 1500);
     }
