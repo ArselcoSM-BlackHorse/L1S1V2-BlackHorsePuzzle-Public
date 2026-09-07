@@ -2278,7 +2278,23 @@ window.addEventListener('DOMContentLoaded', async function() {
   console.log('📄 Enhanced Black Horse Puzzle - Initializing secure system');
   
   if (email) {
-    // ✅ TAMBAH: Auto-sync dengan backend saat page load
+    // 💥 PERBAIKAN UTAMA: LANGSUNG SEMBUNYIKAN LOGIN BOX DI SINI!
+    // Jangan tunggu 'await' backend selesai agar tidak bocor/flicker di Black Horse Solo!
+    if (window.setLoginBoxVisibility) {
+      window.setLoginBoxVisibility(false);
+    } else {
+      const loginBox = document.getElementById("loginBox");
+      if (loginBox) loginBox.style.display = "none";
+    }
+    
+    // Pastikan tombol Logout yang tampil
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) logoutBtn.style.display = "block";
+    
+    const verificationBox = document.getElementById("verificationBox");
+    if (verificationBox) verificationBox.style.display = "none";
+
+    // ✅ PROSES ASYNCHRONOUS (BACKEND SYNC) BERJALAN DI BELAKANG
     try {
       console.log('🔄 Starting initial backend sync...');
       const syncResult = await syncProgressFromBackend(email);
@@ -2366,7 +2382,6 @@ window.addEventListener('DOMContentLoaded', async function() {
       loader.style.display = 'none';
     }, 1000);
   }
-
 });
 
 // async function handleScoreStatus(inputEmail, scoreStatus) { DIHAPUS KARENA MEMANGGIL UPDATEGAMESCORE YG SUDAH DIHAPUS YG DIPAKAI UPDATEUSERPROGRESS
