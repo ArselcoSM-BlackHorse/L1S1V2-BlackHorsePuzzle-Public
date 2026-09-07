@@ -68,7 +68,12 @@
       const isLoggedIn = localStorage.getItem("user_logged_in") === "true";
       const logoutBtn = document.getElementById("logoutBtn");
       const landingOverlay = document.getElementById("landingOverlay");
-      const warningShown = sessionStorage.getItem('bhpWarningShown') === '1';
+      //const warningShown = sessionStorage.getItem('bhpWarningShown') === '1';
+      const shouldKeepHiddenForLanding =
+        landingOverlay &&
+        landingOverlay.style.display !== 'none';
+
+      window.setLoginBoxVisibility(!shouldKeepHiddenForLanding);
 
       window.setLoginBoxVisibility = function(visible) {
         const loginBox = document.getElementById("loginBox");
@@ -89,7 +94,7 @@
         const shouldKeepHiddenForLanding =
           landingOverlay &&
           landingOverlay.style.display !== 'none' &&
-          !warningShown;
+          // !warningShown;
 
         //window.setLoginBoxVisibility(true);
         window.setLoginBoxVisibility(!shouldKeepHiddenForLanding);
@@ -2342,12 +2347,12 @@ window.addEventListener('DOMContentLoaded', async function() {
     }
   } else {
     const landingOverlay = document.getElementById('landingOverlay');
-    const warningShown = sessionStorage.getItem('bhpWarningShown') === '1';
+    //const warningShown = sessionStorage.getItem('bhpWarningShown') === '1';
     const shouldKeepHiddenForLanding =
       landingOverlay &&
       landingOverlay.style.display !== 'none' &&
-      !warningShown;
-      
+      // !warningShown;
+      true;
     // Show login form
     //document.getElementById("loginBox").style.display = "block";
     window.setLoginBoxVisibility?.(!shouldKeepHiddenForLanding);
