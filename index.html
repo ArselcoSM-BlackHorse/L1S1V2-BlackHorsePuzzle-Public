@@ -2372,8 +2372,13 @@ window.addEventListener('DOMContentLoaded', async function() {
     // Show login form
     //document.getElementById("loginBox").style.display = "block";
     window.setLoginBoxVisibility?.(!shouldKeepHiddenForLanding);
-    document.getElementById("verificationBox").style.display = "none";
-    document.getElementById("logoutBtn").style.display = "none";
+    //document.getElementById("verificationBox").style.display = "none";
+    //document.getElementById("logoutBtn").style.display = "none";
+    const verificationBox = document.getElementById("verificationBox");
+    if (verificationBox) verificationBox.style.display = "none";
+    
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) logoutBtn.style.display = "none";
   }
   // ✅ TAMBAH: Hide loader setelah semua initialization selesai
   const loader = document.getElementById('loader');
