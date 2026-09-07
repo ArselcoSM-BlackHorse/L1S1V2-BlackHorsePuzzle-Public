@@ -90,8 +90,9 @@
           landingOverlay &&
           landingOverlay.style.display !== 'none' &&
           !warningShown;
-          
-        window.setLoginBoxVisibility(true);
+
+        //window.setLoginBoxVisibility(true);
+        window.setLoginBoxVisibility(!shouldKeepHiddenForLanding);
         if (logoutBtn) logoutBtn.style.display = "none";
       }
     });
@@ -2340,8 +2341,16 @@ window.addEventListener('DOMContentLoaded', async function() {
       showLoginForm();
     }
   } else {
+    const landingOverlay = document.getElementById('landingOverlay');
+    const warningShown = sessionStorage.getItem('bhpWarningShown') === '1';
+    const shouldKeepHiddenForLanding =
+      landingOverlay &&
+      landingOverlay.style.display !== 'none' &&
+      !warningShown;
+      
     // Show login form
-    document.getElementById("loginBox").style.display = "block";
+    //document.getElementById("loginBox").style.display = "block";
+    window.setLoginBoxVisibility?.(!shouldKeepHiddenForLanding);
     document.getElementById("verificationBox").style.display = "none";
     document.getElementById("logoutBtn").style.display = "none";
   }
