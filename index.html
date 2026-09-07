@@ -67,6 +67,8 @@
       //const email = localStorage.getItem("email");
       const isLoggedIn = localStorage.getItem("user_logged_in") === "true";
       const logoutBtn = document.getElementById("logoutBtn");
+      const landingOverlay = document.getElementById("landingOverlay");
+      const warningShown = sessionStorage.getItem('bhpWarningShown') === '1';
 
       window.setLoginBoxVisibility = function(visible) {
         const loginBox = document.getElementById("loginBox");
@@ -79,12 +81,18 @@
         loginBox.style.pointerEvents = visible ? "auto" : "none";
       };
 
-        if (isLoggedIn) {
+      if (isLoggedIn) {
         window.setLoginBoxVisibility(false);
-        logoutBtn.style.display = "inline-block";
+        //logoutBtn.style.display = "inline-block";
+        if (logoutBtn) logoutBtn.style.display = "inline-block";
       } else {
+        const shouldKeepHiddenForLanding =
+          landingOverlay &&
+          landingOverlay.style.display !== 'none' &&
+          !warningShown;
+          
         window.setLoginBoxVisibility(true);
-        logoutBtn.style.display = "none";
+        if (logoutBtn) logoutBtn.style.display = "none";
       }
     });
     </script>
@@ -146,7 +154,7 @@
   @media (max-width: 1024px) {
     #maintenance-overlay { display: none !important; }
     #landingOverlay { display: flex !important; }
-    #loginBox { display: block !important; }
+    /*#loginBox { display: block !important; }*/
   }
  
   @media (min-width: 1025px) {

@@ -818,28 +818,34 @@ class SplashScene extends Phaser.Scene {
       }
       if (this.loginInProgress) return;
       this.loginInProgress = true;
+
       const originalText = loginBtn.textContent;
       loginBtn.disabled = true;
       loginBtn.textContent = 'Please Wait...';
       loginBtn.style.opacity = '0.6';
+
       try {
         // Proses register ke backend
         console.log('Step 1: Registering user...');
         const registered = await this.registerUser(inputEmail);
         console.log('Step 2: Registered?', registered);
+
         if (!registered) {
           alert('Failed to register email. Please try again.');
           return;
         }
+
         //localStorage.setItem("email", inputEmail);
         console.log('📧 Attempting login with email:', inputEmail);
-    
         console.log('Step 3: Sending verification email...');
         // Selalu cek ke backend, kirim kode verifikasi ke email
         await this.resendVerificationEmail(inputEmail);
+
         console.log('Step 4: Showing verification box...');
+
         // Tampilkan verificationBox, sembunyikan login dan logoutBtn
-        document.getElementById("loginBox").style.display = "none";
+        //document.getElementById("loginBox").style.display = "none";
+        window.setLoginBoxVisibility?.(false);
         document.getElementById("logoutBtn").style.display = "none";
          // Tampilkan verificationBox
         document.getElementById("verificationBox").style.zIndex = "1000"; 
@@ -848,11 +854,13 @@ class SplashScene extends Phaser.Scene {
         document.getElementById("verifyBtn").style.display = "inline-block";
         console.log('✅ Verification box displayed');
         } catch (error) {
-        if (error.response && error.response.data) {
-        const errorData = error.response.data;
-        }    
-        console.error('❌ Login error:', error);
-        alert('Login Error: ' + error.message);
+          console.error('❌ Login error:', error);
+          alert("Login failed. Please try again.");
+        //if (error.response && error.response.data) {
+        //const errorData = error.response.data;
+        //}    
+        //console.error('❌ Login error:', error);
+        //alert('Login Error: ' + error.message);
         } finally {
         setTimeout(() => {
           loginBtn.disabled = false;
