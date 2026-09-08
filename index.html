@@ -67,8 +67,6 @@
       //const email = localStorage.getItem("email");
       const isLoggedIn = localStorage.getItem("user_logged_in") === "true";
       const logoutBtn = document.getElementById("logoutBtn");
-      const landingOverlay = document.getElementById("landingOverlay");
-      //const warningShown = sessionStorage.getItem('bhpWarningShown') === '1';
 
       window.setLoginBoxVisibility = function(visible) {
         const loginBox = document.getElementById("loginBox");
@@ -81,16 +79,13 @@
         loginBox.style.pointerEvents = visible ? "auto" : "none";
       };
 
-      const shouldKeepHiddenForLanding =
-        landingOverlay &&
-        landingOverlay.style.display !== 'none';
-      
+      //if (email) {
       if (isLoggedIn) {
         window.setLoginBoxVisibility(false);
-        if (logoutBtn) logoutBtn.style.display = "inline-block";
+        logoutBtn.style.display = "inline-block";
       } else {
-        window.setLoginBoxVisibility(!shouldKeepHiddenForLanding);
-        if (logoutBtn) logoutBtn.style.display = "none";
+        window.setLoginBoxVisibility(true);
+        logoutBtn.style.display = "none";
       }
     });
     </script>
@@ -152,7 +147,7 @@
   @media (max-width: 1024px) {
     #maintenance-overlay { display: none !important; }
     #landingOverlay { display: flex !important; }
-    /*#loginBox { display: block !important; }*/
+    #loginBox { display: block !important; }
   }
  
   @media (min-width: 1025px) {
@@ -592,7 +587,7 @@ window.checkPaymentStatusFromBackend = async function(email) {
     const res = await axios.post(
       `${window.BACKEND_URL}/api/${encodeURIComponent(email)}/payment-status`,
       { }, // Send email in POST body
-      {timeout: 90000}
+      {timeout: 200000}
     );
     const data = res.data;
     console.log('💳 Payment status response:', data);
@@ -913,36 +908,12 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
   if (entranceGameBtn) {
     entranceGameBtn.onclick = function() {
       console.log('✅ Tombol entrance diklik');
-
-      /*document.getElementById('landingOverlay').style.display = 'none';
+      document.getElementById('landingOverlay').style.display = 'none';
       document.getElementById('loginBox').style.display = 'block';
       window.sessionStorage.setItem('bhpWarningShown', '1');
       const loader = document.getElementById('loader');
       if (loader) loader.style.display = 'none';
-      */
-      const landingOverlay = document.getElementById('landingOverlay');
-      const loginBox = document.getElementById('loginBox');
-      const loader = document.getElementById('loader');
-
-      if (landingOverlay) landingOverlay.style.display = 'none';
-
-      if (loginBox) {
-        loginBox.classList.remove('hidden');
-        if (window.setLoginBoxVisibility) {
-          window.setLoginBoxVisibility(true);
-        } else {
-          loginBox.style.display = 'block';
-          loginBox.style.visibility = 'visible';
-          loginBox.style.opacity = '1';
-          loginBox.style.pointerEvents = 'auto';
-        }
-      }
-
-      window.sessionStorage.setItem('bhpWarningShown', '1');
-
-      if (loader) loader.style.display = 'none';
     };
-    
   } else {
     console.error('❌ Tombol entrance tidak ditemukan!');
   }
@@ -1229,128 +1200,128 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
     </script>
     
   
-    <script>
-    // Agar mouse wheel di atas canvas tetap scroll halaman, walau canvas diganti/direfresh Phaser
-   //Fix Canvas function addScrollToCanvas() {
-    window.addScrollToCanvas = function() {
-      const canvas = document.querySelector('canvas');
-      if (canvas && !canvas._scrollListenerAdded) {
-        canvas.addEventListener('wheel', function(e) {
+   <script>
+      // Agar mouse wheel di atas canvas tetap scroll halaman, walau canvas diganti/direfresh Phaser
+     //Fix Canvas function addScrollToCanvas() {
+     window.addScrollToCanvas = function() {
+       const canvas = document.querySelector('canvas');
+       if (canvas && !canvas._scrollListenerAdded) {
+         canvas.addEventListener('wheel', function(e) {
           window.scrollBy(0, e.deltaY);
-        });
+       });
         canvas._scrollListenerAdded = true;
         console.log('✅ Canvas scroll fixed - no more anvas!');
-      }
-    };
-
-     // ✅ SAFE EMERGENCY SAVE ON BEFOREUNLOAD (DI LUAR CLASS)
-    window.addEventListener('beforeunload', () => {
-     const email = localStorage.getItem("email");
-     if (!email) return;
-  
-     const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
-     const gameProgress = userData.gameProgress || {};
-  
-     if (!gameProgress.level01Score && !gameProgress.totalPlays) {
-      console.log('⚠️ No meaningful data to save on beforeunload');
-      return;
      }
-  
-     const progress = {
-      level01Score: gameProgress.level01Score || 0,
-      starAlpha: gameProgress.starAlpha || 0,
-      totalPlays: gameProgress.totalPlays || 0,
-      level01HighScore: gameProgress.level01HighScore || 0,
-      level01Completed: gameProgress.level01Completed || false,
-      bestTime: gameProgress.bestTime || 0,
-      averageTime: gameProgress.averageTime || 0,
-      completionRate: gameProgress.completionRate || 0,
-      perfectGames: gameProgress.perfectGames || false,
-      totalAttempts: gameProgress.totalAttempts || 0,
-      completionTime: gameProgress.completionTime || 0,
-      isPerfectGame: gameProgress.isPerfectGame || false,
-      saveSource: 'beforeunload'
-     };
-  
-     const url = `${window.BACKEND_URL}/api/users/${encodeURIComponent(email)}/update-progress`;
-     navigator.sendBeacon(url, JSON.stringify(progress));
-  
-     console.log('💾 Safe emergency save:', progress.level01Score);
-    });
+    } 
 
-    // Tambahkan di index.html, sebelum dipakai
-    window.syncProgressFromBackend = async (email) => {
-    try {
-      console.log('🔄 Syncing progress from backend for:', email);
-      const localData = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}') || {};
-      const localProgress = localData.gameProgress || {};
-      console.log('📱 Local data:', localProgress);
-      const response = await axios.post(
-        `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/${encodeURIComponent(email)}/progress`,
-        {
-          email,
-          level: 'Level01Scene',
-          series2BagClosedActive: localProgress.series2BagClosedActive ?? true,
-          localProgress: localProgress
-        },
-        { timeout: 20000 }
-      );
+// ✅ SAFE EMERGENCY SAVE ON BEFOREUNLOAD (DI LUAR CLASS)
+window.addEventListener('beforeunload', () => {
+  const email = localStorage.getItem("email");
+  if (!email) return;
   
-      // ✅ STEP 3: Ambil data dari backend (PRIORITAS UTAMA)
-      const backendData = response.data;
-      const progress = backendData.progress || {};
+  const userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
+  const gameProgress = userData.gameProgress || {};
+  
+  if (!gameProgress.level01Score && !gameProgress.totalPlays) {
+    console.log('⚠️ No meaningful data to save on beforeunload');
+    return;
+  }
+  
+  const progress = {
+    level01Score: gameProgress.level01Score || 0,
+    starAlpha: gameProgress.starAlpha || 0,
+    totalPlays: gameProgress.totalPlays || 0,
+    level01HighScore: gameProgress.level01HighScore || 0,
+    level01Completed: gameProgress.level01Completed || false,
+    bestTime: gameProgress.bestTime || 0,
+    averageTime: gameProgress.averageTime || 0,
+    completionRate: gameProgress.completionRate || 0,
+    perfectGames: gameProgress.perfectGames || false,
+    totalAttempts: gameProgress.totalAttempts || 0,
+    completionTime: gameProgress.completionTime || 0,
+    isPerfectGame: gameProgress.isPerfectGame || false,
+    saveSource: 'beforeunload'
+ };
+  
+  const url = `${window.BACKEND_URL}/api/users/${encodeURIComponent(email)}/update-progress`;
+  navigator.sendBeacon(url, JSON.stringify(progress));
+  
+  console.log('💾 Safe emergency save:', progress.level01Score);
+});
 
-      const parseSavedTime = (value) => {
+// Tambahkan di index.html, sebelum dipakai
+window.syncProgressFromBackend = async function(email) {
+ try {
+    console.log('🔄 Syncing progress from backend for:', email);
+    const localData = JSON.parse(localStorage.getItem(`gameData-${email}`) || '{}') || {};
+    const localProgress = localData.gameProgress || {};
+    console.log('📱 Local data:', localProgress);
+    const response = await axios.post(
+      `${(window.BACKEND_URL || '').trim().replace(/\/+$/,'')}/api/users/${encodeURIComponent(email)}/progress`,
+      {
+        email,
+        level: 'Level01Scene',
+        localProgress: localProgress
+      },
+      { timeout: 200000 }
+    );
+  
+     // ✅ STEP 3: Ambil data dari backend (PRIORITAS UTAMA)
+    const backendData = response.data;
+    const progress = backendData.progress || {};
+
+    const parseSavedTime = (value) => {
       const timestamp = Date.parse(value || 0);
       return Number.isFinite(timestamp) ? timestamp : 0;
-      };
-      const readNumber = (source, key) => {
-        const value = Number(source?.[key]);
-        return Number.isFinite(value) ? value : null;
-      };
-      const readBoolean = (source, key) => {
-        return typeof source?.[key] === 'boolean' ? source[key] : null;
-      };
-      const readObject = (source, key) => {
-        return source?.[key] && typeof source[key] === 'object' ? source[key] : null;
-      };
+    };
+    const readNumber = (source, key) => {
+      const value = Number(source?.[key]);
+      return Number.isFinite(value) ? value : null;
+    };
+    const readBoolean = (source, key) => {
+      return typeof source?.[key] === 'boolean' ? source[key] : null;
+    };
+    const readObject = (source, key) => {
+      return source?.[key] && typeof source[key] === 'object' ? source[key] : null;
+    };
 
-      const backendSavedAt = parseSavedTime(progress.lastSaved);
-      const localSavedAt = parseSavedTime(localProgress.lastSaved);
-      const latestProgress = localSavedAt > backendSavedAt ? localProgress : progress;
-      const fallbackProgress = localSavedAt > backendSavedAt ? progress : localProgress;
+    const backendSavedAt = parseSavedTime(progress.lastSaved);
+    const localSavedAt = parseSavedTime(localProgress.lastSaved);
+    const latestProgress = localSavedAt > backendSavedAt ? localProgress : progress;
+    const fallbackProgress = localSavedAt > backendSavedAt ? progress : localProgress;
     
+
     const pickLatestNumber = (key, fallbackValue = 0) => {
-        const latestValue = readNumber(latestProgress, key);
-        if (latestValue !== null) return latestValue;
-        const fallbackCandidate = readNumber(fallbackProgress, key);
-        if (fallbackCandidate !== null) return fallbackCandidate;
-        const ownValue = Number(fallbackValue);
-        return Number.isFinite(ownValue) ? ownValue : 0;
+      const latestValue = readNumber(latestProgress, key);
+      if (latestValue !== null) return latestValue;
+      const fallbackCandidate = readNumber(fallbackProgress, key);
+      if (fallbackCandidate !== null) return fallbackCandidate;
+      const ownValue = Number(fallbackValue);
+      return Number.isFinite(ownValue) ? ownValue : 0;
     };
 
     const pickLatestBoolean = (key, fallbackValue = false) => {
-        const latestValue = readBoolean(latestProgress, key);
-        if (latestValue !== null) return latestValue;
-        const fallbackCandidate = readBoolean(fallbackProgress, key);
-        if (fallbackCandidate !== null) return fallbackCandidate;
-        return fallbackValue === true;
+      const latestValue = readBoolean(latestProgress, key);
+      if (latestValue !== null) return latestValue;
+      const fallbackCandidate = readBoolean(fallbackProgress, key);
+      if (fallbackCandidate !== null) return fallbackCandidate;
+      return fallbackValue === true;
     };
 
     const pickLatestString = (key, fallbackValue = '') => {
-        const latestValue = typeof latestProgress?.[key] === 'string' ? latestProgress[key] : null;
-        if (latestValue !== null) return latestValue;
-        const fallbackCandidate = typeof fallbackProgress?.[key] === 'string' ? fallbackProgress[key] : null;
-        if (fallbackCandidate !== null) return fallbackCandidate;
-        return String(fallbackValue || '');
+      const latestValue = typeof latestProgress?.[key] === 'string' ? latestProgress[key] : null;
+      if (latestValue !== null) return latestValue;
+      const fallbackCandidate = typeof fallbackProgress?.[key] === 'string' ? fallbackProgress[key] : null;
+      if (fallbackCandidate !== null) return fallbackCandidate;
+      return String(fallbackValue || '');
     };
 
     const pickLatestObject = (key, fallbackValue = null) => {
       const latestValue = readObject(latestProgress, key);
-        if (latestValue) return latestValue;
-        const fallbackCandidate = readObject(fallbackProgress, key);
-        if (fallbackCandidate) return fallbackCandidate;
-        return fallbackValue;
+      if (latestValue) return latestValue;
+      const fallbackCandidate = readObject(fallbackProgress, key);
+      if (fallbackCandidate) return fallbackCandidate;
+      return fallbackValue;
     };
     
     const totalPlays = Math.max(0, pickLatestNumber('totalPlays', 0));
@@ -1373,32 +1344,23 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
       pickLatestNumber('level01Score', 0);
     const level01Score = mergedLevel01Score;  
 
-   // ✅ STEP 3: BACA DATA PENTING DARI BACKEND & LOCALSTORAGE (KLASIFIKASI KORAKSI)
-    const isPaidUser = backendData?.isPaid === true || progress?.isPaid === true || localProgress?.isPaid === true;
+      // ✅ STEP 3: BACA DATA PENTING DARI BACKEND & LOCALSTORAGE
+    const userStatus = {
+      newUser: totalPlays === 0 && !isGameOverSaved && round === 1 && level01Score === 0,
+      winUser: level01Score > 0,
+      lossUser: isGameOverSaved || (round >= 3 && level01Score === 0) || (totalPlays >= 3 && level01Score === 0)
+    };
+    // 3. Ekstrak variabel agar bisa dipakai di baris-baris bawahnya
+    const newUser = userStatus.newUser;
+    const winUser = userStatus.winUser;
+    const lossUser = userStatus.lossUser;
 
-    // LossUser HANYA JIKA Game Over / Gagal DAN belum membayar (Paid)
-    const lossUser = (isGameOverSaved || (round >= 3 && level01Score === 0) || (totalPlays >= 3 && level01Score === 0)) && !isPaidUser;
-
-    // WinUser HANYA JIKA TIDAK LossUser DAN pernah mendapat skor > 0
-    const winUser = !lossUser && (level01Score > 0);
-
-    // NewUser HANYA JIKA pemain benar-benar belum pernah main, belum pernah skor, dan bukan LossUser
-    const newUser = !winUser && !lossUser && (totalPlays === 0 && !isGameOverSaved && round === 1 && level01Score === 0);
-
-    const userStatus = { newUser, winUser, lossUser };
-
-    console.log(`👤 Backend user classification (Corrected): newUser=${newUser}, winUser=${winUser}, lossUser=${lossUser}`);
-
-    // 💡 UPDATE GLOBAL STATE PLAYER
+    console.log(`👤 Backend user classification: newUser=${userStatus.newUser}, winUser=${userStatus.winUser}, lossUser=${userStatus.lossUser}`);
+    
+    // 💡 [TAMBAHAN BARU]: Jika sync mendeteksi LossUser, matikan akses sessionPaymentOK
     if (lossUser) {
       window.sessionPaymentOK = false;
-      window.lossUser = true;
-      window.winUser = false;
       console.log('⛔ [Sync] LossUser detected! Resetting window.sessionPaymentOK to false');
-    } else {
-      window.lossUser = false;
-      window.winUser = winUser;
-      if (isPaidUser) window.sessionPaymentOK = true;
     }
 
     // ✅ STEP 4: HITUNG VARIABEL SISA
@@ -1428,7 +1390,6 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
     const totalAttempts = pickLatestNumber('totalAttempts', 0);
     const starBronzeAlpha = pickLatestNumber('starBronzeAlpha', 0);
     const starAwarded = pickLatestBoolean('starAwarded', false);
-    const series2BagClosedActive = pickLatestBoolean('series2BagClosedActive', true);
     const starBronzeBlackHorseAlpha = pickLatestNumber('starBronzeBlackHorseAlpha', 0);
     const gameOvers = backendData.gameOvers || 0;
     const lastPlayedDate = backendData.lastPlayedDate || null;
@@ -1440,7 +1401,6 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
       isGameOver: isGameOver,
       gameOvers,
       totalPlays,
-      series2BagClosedActive,
       round,
       claimedCandyCapacity,
       scoreCandy,
@@ -1508,7 +1468,6 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
       round: round,
       starBronzeAlpha: starBronzeAlpha,
       starAwarded: starAwarded,
-      series2BagClosedActive,
       starBronzeBlackHorseAlpha: starBronzeBlackHorseAlpha,
       bestTime: bestTime,
       levelCompleted: level01Completed,
@@ -1528,7 +1487,6 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
     window.starBronzeBlackHorseAlpha = starBronzeBlackHorseAlpha || 0;
     window.starBronzeAlpha = starBronzeAlpha || 0;
     window.starAwarded = starAwarded || false;
-    window.series2BagClosedActive = series2BagClosedActive || true;
     window.round = round || 1;
     window.totalPlays = totalPlays || 0;
     window.level01Completed = level01Completed || false;
@@ -1575,9 +1533,8 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
       success: false,
       error: err.message
     };
-   }  
+  }  
   }
-
 //=================================== BATAS SENDBEACON ====================================
 
 document.addEventListener('visibilitychange', () => {
@@ -1827,7 +1784,7 @@ let paymentCheckInterval = null;
   window.addScrollToCanvas();
 
   // ✅ ENHANCED LOGIN BUTTON WITH level01Score MANAGEMENT: WITH LAZY LOAD 
-  // ✅ ENHANCED LOGIN HANDLER: ------ Mulai login handler ------------------- 
+// ✅ ENHANCED LOGIN HANDLER: ------ Mulai login handler ------------------- 
   document.getElementById("loginBtn").onclick = async function(event) {
   event.preventDefault();
   event.stopPropagation();
@@ -1862,7 +1819,7 @@ async function registerUser(email) {
   const response = await axios.post(
     `${window.BACKEND_URL}/api/users/register`,
     { email: email.toLowerCase().trim() },
-    { timeout: 20000 }
+    { timeout: 200000 }
   );
   const data = response.data;
   console.log('✅ Backend email verification successful:', data.message);
@@ -1913,13 +1870,12 @@ try {
     document.getElementById("verifyBtn").style.display = "inline-block";
     console.log('✅ Verification box displayed');
   } catch (error) {
-    const backendMessage =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Login failed. Please try again.";
-
-    console.error('❌ Login error:', backendMessage);
-    alert("Login failed. Please try again.");
+    if (error.response && error.response.data) {
+      const errorData = error.response.data;
+    }
+   // if (window.hidePleaseWaitMessage) hidePleaseWaitMessage();
+   // console.error('❌ Login error:', error.message);
+   // alert('Login Error: ' + error.message);
   } finally {
     setTimeout(() => {
       loginBtn.disabled = false;
@@ -1944,7 +1900,7 @@ try {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/users/verify-email`,
       { email, verificationCode: code },
-      { timeout: 20000 }
+      { timeout: 200000 }
     );
     const data = response.data;
     console.log('✅ Email verification response:', data);
@@ -1991,7 +1947,7 @@ async function checkEmailVerifiedFromBackend(email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/users/check-email`,
       { email: email},
-      { timeout: 20000 }
+      { timeout: 200000 }
     );
     return response.data && response.data.emailVerified === true;
   } catch (error) {
@@ -2022,7 +1978,7 @@ window.resendVerificationEmail = async function(email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/users/resend-verification`,
       { email },
-      { timeout: 20000 }
+      { timeout: 200000 }
     );
     const data = response.data;
     if (data.success) {
@@ -2270,23 +2226,7 @@ window.addEventListener('DOMContentLoaded', async function() {
   console.log('📄 Enhanced Black Horse Puzzle - Initializing secure system');
   
   if (email) {
-    // 💥 PERBAIKAN UTAMA: LANGSUNG SEMBUNYIKAN LOGIN BOX DI SINI!
-    // Jangan tunggu 'await' backend selesai agar tidak bocor/flicker di Black Horse Solo!
-    if (window.setLoginBoxVisibility) {
-      window.setLoginBoxVisibility(false);
-    } else {
-      const loginBox = document.getElementById("loginBox");
-      if (loginBox) loginBox.style.display = "none";
-    }
-    
-    // Pastikan tombol Logout yang tampil
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) logoutBtn.style.display = "block";
-    
-    const verificationBox = document.getElementById("verificationBox");
-    if (verificationBox) verificationBox.style.display = "none";
-
-    // ✅ PROSES ASYNCHRONOUS (BACKEND SYNC) BERJALAN DI BELAKANG
+    // ✅ TAMBAH: Auto-sync dengan backend saat page load
     try {
       console.log('🔄 Starting initial backend sync...');
       const syncResult = await syncProgressFromBackend(email);
@@ -2354,23 +2294,10 @@ window.addEventListener('DOMContentLoaded', async function() {
       showLoginForm();
     }
   } else {
-    const landingOverlay = document.getElementById('landingOverlay');
-    //const warningShown = sessionStorage.getItem('bhpWarningShown') === '1';
-    const shouldKeepHiddenForLanding =
-      landingOverlay &&
-      landingOverlay.style.display !== 'none' &&
-      // !warningShown;
-      true;
     // Show login form
-    //document.getElementById("loginBox").style.display = "block";
-    window.setLoginBoxVisibility?.(!shouldKeepHiddenForLanding);
-    //document.getElementById("verificationBox").style.display = "none";
-    //document.getElementById("logoutBtn").style.display = "none";
-    const verificationBox = document.getElementById("verificationBox");
-    if (verificationBox) verificationBox.style.display = "none";
-    
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) logoutBtn.style.display = "none";
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("verificationBox").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "none";
   }
   // ✅ TAMBAH: Hide loader setelah semua initialization selesai
   const loader = document.getElementById('loader');
@@ -2379,12 +2306,13 @@ window.addEventListener('DOMContentLoaded', async function() {
       loader.style.display = 'none';
     }, 1000);
   }
+
 });
 
 // async function handleScoreStatus(inputEmail, scoreStatus) { DIHAPUS KARENA MEMANGGIL UPDATEGAMESCORE YG SUDAH DIHAPUS YG DIPAKAI UPDATEUSERPROGRESS
 
         
-/*        
+        
 if (window.Phaser && window.game && window.game.scene) {
     //window.game.scene.start(`${window.BACKEND_URL}/Scenes/SplashScene.js`); //dari Level01Scene ganti ke SplashScene 
      window.game.scene.start("SplashScene"); // ✅ BENAR
@@ -2398,7 +2326,7 @@ if (window.Phaser && window.game && window.game.scene) {
   
       console.log('✅ Enhanced login complete');
      alert("Login failed. Please try again.");
-    }*/
+    }
 
 
   // ✅ ENHANCED LOGOUT BUTTON:
@@ -2453,6 +2381,8 @@ if (window.Phaser && window.game && window.game.scene) {
       }
       
       setTimeout(() => {
+        //if (window.Phaser && window.game && window.game.scene) {
+        //window.game.scene.start(`${window.BACKEND_URL}/Scenes/SplashScene.js`);
         window.game.scene.start("SplashScene"); // ✅ BENAR
       }, 1500);
     }
@@ -2497,7 +2427,7 @@ async function createPayPalOrder(email, amount, message = 'Black Horse Puzzle Su
         amount,
         message
       },
-      { timeout: 90000 }
+      { timeout: 200000 }
     );
     const data = response.data;
     if (data.success && data.paypalOrderId && data.approvalUrl) {
@@ -2523,7 +2453,7 @@ async function capturePayPalOrder(paypalOrderId, email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/capture-order/${paypalOrderId}`,
       { email },
-      { timeout: 90000 }
+      { timeout: 200000 }
     );
     const data = response.data;
     if (data.success && data.paypalOrderId === paypalOrderId) {
@@ -2563,7 +2493,7 @@ async function verifyPayPalToken(token, payerID, email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/verify-paypal-token`,
       { token, payerID, email },
-      { timeout: 90000 } // timeout dalam ms
+      { timeout: 200000 } // timeout dalam ms
     );
 
     const data = response.data;
@@ -2593,7 +2523,7 @@ async function verifyPayPalOrder(orderId, email) {
     const response = await axios.post(
       `${window.BACKEND_URL}/api/verify-paypal`,
       {paypalOrderId: orderId, email },
-      { timeout: 90000 }
+      { timeout: 200000 }
     );
 
     const data = response.data;
