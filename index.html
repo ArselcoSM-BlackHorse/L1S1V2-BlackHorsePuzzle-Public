@@ -147,7 +147,7 @@
   @media (max-width: 1024px) {
     #maintenance-overlay { display: none !important; }
     #landingOverlay { display: flex !important; }
-    #loginBox { display: block !important; }
+    /*#loginBox { display: block !important; }*/
   }
  
   @media (min-width: 1025px) {
@@ -906,7 +906,9 @@ if (window.innerWidth > 1024) {
 
 const entranceGameBtn = document.getElementById('entranceGameBtn');
   if (entranceGameBtn) {
-    entranceGameBtn.onclick = function() {
+    const handleEntranceClick = function(event) {
+    //entranceGameBtn.onclick = function() {
+      event?.preventDefault?.();
       console.log('✅ Tombol entrance diklik');
       document.getElementById('landingOverlay').style.display = 'none';
 
@@ -918,6 +920,9 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
       const loader = document.getElementById('loader');
       if (loader) loader.style.display = 'none';
     };
+
+    entranceGameBtn.onclick = handleEntranceClick;
+    entranceGameBtn.addEventListener('touchend', handleEntranceClick, { passive: false });
   } else {
     console.error('❌ Tombol entrance tidak ditemukan!');
   }
@@ -2065,11 +2070,7 @@ window.unlockPlayAndHideGameOver = function() {
   const level01 = window.game && window.game.scene && window.game.scene.getScene("Level01Scene");
   if (!level01) return;
 
-  // Aktifkan tombol Play & 10 Puzzle
-  //if (level01.playBtn) {
-    //level01.playBtn.setInteractive();
-    //level01.playBtn.setAlpha(1);
-  //}
+ 
   if (level01.lv01Puzzle10Btn) {
     level01.lv01Puzzle10Btn.setInteractive();
     level01.lv01Puzzle10Btn.setAlpha(1);
