@@ -69,11 +69,6 @@
       const logoutBtn = document.getElementById("logoutBtn");
       const landingOverlay = document.getElementById("landingOverlay");
       //const warningShown = sessionStorage.getItem('bhpWarningShown') === '1';
-      const shouldKeepHiddenForLanding =
-        landingOverlay &&
-        landingOverlay.style.display !== 'none';
-
-      window.setLoginBoxVisibility(!shouldKeepHiddenForLanding);
 
       window.setLoginBoxVisibility = function(visible) {
         const loginBox = document.getElementById("loginBox");
@@ -86,17 +81,14 @@
         loginBox.style.pointerEvents = visible ? "auto" : "none";
       };
 
+      const shouldKeepHiddenForLanding =
+        landingOverlay &&
+        landingOverlay.style.display !== 'none';
+      
       if (isLoggedIn) {
         window.setLoginBoxVisibility(false);
-        //logoutBtn.style.display = "inline-block";
         if (logoutBtn) logoutBtn.style.display = "inline-block";
       } else {
-        const shouldKeepHiddenForLanding =
-          landingOverlay &&
-          landingOverlay.style.display !== 'none' &&
-          // !warningShown;
-
-        //window.setLoginBoxVisibility(true);
         window.setLoginBoxVisibility(!shouldKeepHiddenForLanding);
         if (logoutBtn) logoutBtn.style.display = "none";
       }
