@@ -909,7 +909,11 @@ const entranceGameBtn = document.getElementById('entranceGameBtn');
     entranceGameBtn.onclick = function() {
       console.log('✅ Tombol entrance diklik');
       document.getElementById('landingOverlay').style.display = 'none';
-      document.getElementById('loginBox').style.display = 'block';
+
+      const isLoggedIn = localStorage.getItem("user_logged_in") === "true";
+      window.setLoginBoxVisibility?.(!isLoggedIn);
+
+      //document.getElementById('loginBox').style.display = 'block';
       window.sessionStorage.setItem('bhpWarningShown', '1');
       const loader = document.getElementById('loader');
       if (loader) loader.style.display = 'none';
@@ -2001,7 +2005,8 @@ document.getElementById("loginAgainBtn").onclick = function() {
   // Sembunyikan verificationBox
   document.getElementById("verificationBox").style.display = "none";
   // Tampilkan loginBox
-  document.getElementById("loginBox").style.display = "block";
+  //document.getElementById("loginBox").style.display = "block";
+  window.setLoginBoxVisibility?.(true);
   document.getElementById("emailInput").focus();
 };
 
@@ -2201,7 +2206,8 @@ function checkPlayerScoreStatus(email) {
 
 // ✅ UTILITY FUNCTIONS:
 function showLoginForm() {
-  document.getElementById("loginBox").style.display = "block";
+  //document.getElementById("loginBox").style.display = "block";
+  window.setLoginBoxVisibility?.(true);
   document.getElementById("emailInput").style.display = "inline-block";
   document.getElementById("loginBtn").style.display = "inline-block";
   document.getElementById("logoutBtn").style.display = "none";
@@ -2211,15 +2217,6 @@ function showLoginForm() {
 // ✅ ENHANCED DOMCONTENTLOADED WITH level01Score MANAGEMENT:
 window.addEventListener('DOMContentLoaded', async function() {
   
-  
-  const loginAgainBtn = document.getElementById("loginAgainBtn");
-  if (loginAgainBtn) {
-    loginAgainBtn.onclick = function() {
-      document.getElementById("verificationBox").style.display = "none";
-      document.getElementById("loginBox").style.display = "block";
-      document.getElementById("emailInput").focus();
-    };
-  }
   const email = localStorage.getItem("email");
   let userData = JSON.parse(localStorage.getItem(`gameData-${email}`)) || {};
 
