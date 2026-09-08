@@ -153,22 +153,19 @@ class SplashScene extends Phaser.Scene {
     this._isShuttingDown = false;
     this._isTransitioning = false;
     this.events.once('shutdown', this.shutdown, this);
-    
-    //const email = localStorage.getItem("email");
-    //if (!email) {
+  
     const email = localStorage.getItem("email");
     const isLoggedIn = localStorage.getItem("user_logged_in") === "true";
-    if (!isLoggedIn) {
-      this.syncAuthUI(false);
-    } else {
-      this.syncAuthUI(true);
-    }
+    //if (!isLoggedIn) {
+    //  this.syncAuthUI(false);
+    //} else {
+    //  this.syncAuthUI(true);
+    //}
     
     // ✅ CHECK GAME OVER STATUS DARI SERVER
     //window.checkGameOverStatusFromServer();
     
     // ✅ BACKEND-CONNECTED USER DATA INITIALIZATION + AUTO-SAVE
-    //if (email) {
       if (email && localStorage.getItem("user_logged_in") === "true") {
       this.initUserData(email).then(initResult => {
         if (!this.isSceneUsable()) return;
