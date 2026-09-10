@@ -146,7 +146,8 @@
   /* Tampilkan maintenance-overlay di layar kecil, sembunyikan landingOverlay dan loginBox */
   @media (max-width: 1024px) {
     #maintenance-overlay { display: none !important; }
-    #landingOverlay { display: flex !important; }
+    /* Tanpa !important agar JS (landingOverlay.style.display='none' saat tombol Enter diklik) tetap bisa menyembunyikannya di HP */
+    #landingOverlay { display: flex; }
     /*#loginBox { display: block !important; } muncul sementara lalu hilang */
   }
  
