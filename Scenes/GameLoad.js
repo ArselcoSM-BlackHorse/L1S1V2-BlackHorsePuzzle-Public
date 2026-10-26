@@ -160,11 +160,15 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_GM2AFBO', './Puzzle-Assets/UI/GM 2A Futuristic Bag Open.webp');
     scene.load.image('bhMiniS2_GM2BFBBS', './Puzzle-Assets/UI/GM 2B Futuristic Bag Bhimbie Show.webp');
     scene.load.image('bhMiniS2_GM3BFBTE', './Puzzle-Assets/UI/GM 3 Bhimbie into Futuristic Bag Teary eyes.webp');
+    scene.load.image('bhMiniS2_GM3BFBTECE', './Puzzle-Assets/UI/GM 3 Bhimbie into Futuristic Bag Teary eyes CE.webp');
     scene.load.image('bhMiniS2_GM4BFBTE', './Puzzle-Assets/UI/GM 4 Bhimbie into Futuristic Bag Shed a Tear.webp');
+    scene.load.image('bhMiniS2_GM4BFBTECE', './Puzzle-Assets/UI/GM 4 Bhimbie into Futuristic Bag Shed a Tear CE.webp');
     scene.load.image('bhMiniS2_GM5BFBCVS', './Puzzle-Assets/UI/GM 5 Bhimbie into Futuristic Bag Closed Very Sad.webp');
     scene.load.image('bhMiniS2_GM5BFBCVS1', './Puzzle-Assets/UI/GM 5 Bhimbie into Futuristic Bag Closed Very Sad1.webp');
     scene.load.image('bhMiniS2_GM5BFBCVS2', './Puzzle-Assets/UI/GM 5 Bhimbie into Futuristic Bag Closed Very Sad2.webp');
     scene.load.image('bhMiniS2_GM6FBEO', './Puzzle-Assets/UI/GM 6 Futuristic Bag Empty Open.webp');
     scene.load.image('bhMiniS2_GM6FBBO', './Puzzle-Assets/UI/GM 6 Futuristic Bag with Bhimbie Open.webp');
+    scene.load.image('bhMiniS2_GM6FBBOCE', './Puzzle-Assets/UI/GM 6 Futuristic Bag with Bhimbie Open CE.webp');
     scene.load.image('bhMiniS2_GM7BGF', './Puzzle-Assets/UI/GM 7 Bhimbie GetOut Free.webp');
+    scene.load.image('bhMiniS2_GM7BGFCE', './Puzzle-Assets/UI/GM 7 Bhimbie GetOut Free Closed Eyes.webp')
   }
