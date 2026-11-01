@@ -144,6 +144,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_6', './Puzzle-Assets/UI/GM BH Mini S02 6 Awake2.webp'); 
     scene.load.image('bhMiniS2_7', './Puzzle-Assets/UI/GM BH Mini S02 7 Awake3.webp');
     scene.load.image('bhMiniS2_8', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked.webp');
+    scene.load.image('bhMiniS2_8Q', './Puzzle-Assets/UI/GM BH Mini S02 8 Question.webp');
     scene.load.image('bhMiniS2_8NQ', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked No Question Mark.webp');
     scene.load.image('bhMiniS2_8CE', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked Closed Eyes.webp');
     scene.load.image('bhMiniS2_8CENQ', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked Closed Eyes NQ.webp');
@@ -167,8 +168,10 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_GM5BFBCVS1', './Puzzle-Assets/UI/GM 5 Bhimbie into Futuristic Bag Closed Very Sad1.webp');
     scene.load.image('bhMiniS2_GM5BFBCVS2', './Puzzle-Assets/UI/GM 5 Bhimbie into Futuristic Bag Closed Very Sad2.webp');
     scene.load.image('bhMiniS2_GM6FBEO', './Puzzle-Assets/UI/GM 6 Futuristic Bag Empty Open.webp');
-    scene.load.image('bhMiniS2_GM6FBBO', './Puzzle-Assets/UI/GM 6 Futuristic Bag with Bhimbie Open.webp');
-    scene.load.image('bhMiniS2_GM6FBBOCE', './Puzzle-Assets/UI/GM 6 Futuristic Bag with Bhimbie Open CE.webp');
-    scene.load.image('bhMiniS2_GM7BGF', './Puzzle-Assets/UI/GM 7 Bhimbie GetOut Free.webp');
-    scene.load.image('bhMiniS2_GM7BGFCE', './Puzzle-Assets/UI/GM 7 Bhimbie GetOut Free Closed Eyes.webp')
+    scene.load.image('bhMiniS2_GM6FBBOU', './Puzzle-Assets/UI/GM 6 Futuristic Bag with Bhimbie Open Unhappy.webp');
+    scene.load.image('bhMiniS2_GM6FBBOUCE', './Puzzle-Assets/UI/GM 6 Futuristic Bag with Bhimbie Open Unhappy CE.webp');
+    scene.load.image('bhMiniS2_GM7FBBO', './Puzzle-Assets/UI/GM 7 Futuristic Bag with Bhimbie Open.webp');
+    scene.load.image('bhMiniS2_GM7FBBOCE', './Puzzle-Assets/UI/GM 7 Futuristic Bag with Bhimbie Open CE.webp');
+    scene.load.image('bhMiniS2_GM8BGF', './Puzzle-Assets/UI/GM 8 Bhimbie GetOut Free.webp');
+    scene.load.image('bhMiniS2_GM8BGFCE', './Puzzle-Assets/UI/GM 8 Bhimbie GetOut Free Closed Eyes.webp')
   }
