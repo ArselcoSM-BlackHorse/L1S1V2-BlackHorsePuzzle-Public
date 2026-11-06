@@ -164,8 +164,8 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_GM2BFBBS', './Puzzle-Assets/UI/GM 2B Futuristic Bag Bhimbie Show.webp');
     scene.load.image('bhMiniS2_GM3BFBTE', './Puzzle-Assets/UI/GM 3 Bhimbie into Futuristic Bag Teary eyes.webp');
     scene.load.image('bhMiniS2_GM3BFBTECE', './Puzzle-Assets/UI/GM 3 Bhimbie into Futuristic Bag Teary eyes CE.webp');
-    scene.load.image('bhMiniS2_GM3BBFBTE', './Puzzle-Assets/UI/GM 3B Bhimbie into Futuristic Bag Teary eyes.webp');
-    scene.load.image('bhMiniS2_GM3BBFBTECE', './Puzzle-Assets/UI/GM 3B Bhimbie into Futuristic Bag Teary eyes CE.webp');
+    scene.load.image('bhMiniS2_GM3BBFBTE', './Puzzle-Assets/UI/GM 3B Bhimbi into Futuristic Bag Shed a Tear.webp');
+    scene.load.image('bhMiniS2_GM3BBFBTECE', './Puzzle-Assets/UI/GM 3B Bhimbi into Futuristic Bag Shed a Tear CE.webp');
     scene.load.image('bhMiniS2_GM4BFBTE', './Puzzle-Assets/UI/GM 4 Bhimbie into Futuristic Bag Shed a Tear.webp');
     scene.load.image('bhMiniS2_GM4BFBTECE', './Puzzle-Assets/UI/GM 4 Bhimbie into Futuristic Bag Shed a Tear CE.webp');
     scene.load.image('bhMiniS2_GM4BBFBTE', './Puzzle-Assets/UI/GM 4B Bhimbie into Futuristic Bag Shed a Tear.webp');
