@@ -155,7 +155,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_9FCE', './Puzzle-Assets/UI/GM BH Mini S02 9 Happy Free Closed Eyes.webp');
     scene.load.image('bhMiniS2_11', './Puzzle-Assets/UI/GM BH Mini S02 11 Back Sit.webp');
     scene.load.image('bhMiniS2_12O', './Puzzle-Assets/UI/GM BH Mini S02 12O Cold Sit.webp');
-    scene.load.image('bhMiniS2_12CE', './Puzzle-Assets/UI/GM BH Mini S02 12CE Cold Sit.webp');
+    scene.load.image('bhMiniS2_12CE', './Puzzle-Assets/UI/GM BH Mini S02 12CE Cold Sit .webp');
     scene.load.image('bhMiniS2_Z1', './Puzzle-Assets/UI/GM BH Mini S02 Icon Sleep Z1.webp');
     scene.load.image('bhMiniS2_Z2', './Puzzle-Assets/UI/GM BH Mini S02 Icon Sleep Z2.webp');
     scene.load.image('bhMiniS2_Z3', './Puzzle-Assets/UI/GM BH Mini S02 Icon Sleep Z3.webp');
