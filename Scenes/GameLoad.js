@@ -144,6 +144,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_6', './Puzzle-Assets/UI/GM BH Mini S02 6 Awake2.webp'); 
     scene.load.image('bhMiniS2_7', './Puzzle-Assets/UI/GM BH Mini S02 7 Awake3.webp');
     scene.load.image('bhMiniS2_8', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked.webp');
+    scene.load.image('bhMiniS2_Q', './Puzzle-Assets/UI/GM BH Mini S02 Question.webp');
     scene.load.image('bhMiniS2_8Q', './Puzzle-Assets/UI/GM BH Mini S02 8 Question.webp');
     scene.load.image('bhMiniS2_8NQ', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked No Question Mark.webp');
     scene.load.image('bhMiniS2_8CE', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked Closed Eyes.webp');
