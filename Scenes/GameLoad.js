@@ -144,11 +144,11 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_5', './Puzzle-Assets/UI/GM BH Mini S02 5 SleepBehind.webp');
     scene.load.image('bhMiniS2_6', './Puzzle-Assets/UI/GM BH Mini S02 6 Awake2.webp'); 
     scene.load.image('bhMiniS2_7', './Puzzle-Assets/UI/GM BH Mini S02 7 Awake3.webp');
-    scene.load.image('bhMiniS2_8', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked.webp');
+    //scene.load.image('bhMiniS2_8', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked.webp');
     scene.load.image('bhMiniS2_Q', './Puzzle-Assets/UI/GM BH Mini S02 Question.webp');
     scene.load.image('bhMiniS2_8Q', './Puzzle-Assets/UI/GM BH Mini S02 8 Question.webp');
     scene.load.image('bhMiniS2_8NQ', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked No Question Mark.webp');
-    scene.load.image('bhMiniS2_8CE', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked Closed Eyes.webp');
+    //scene.load.image('bhMiniS2_8CE', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked Closed Eyes.webp');
     scene.load.image('bhMiniS2_8CENQ', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked Closed Eyes NQ.webp');
     scene.load.image('bhMiniS2_9AC', './Puzzle-Assets/UI/GM BH Mini S02 9 Happy Accept Candy.webp');
     scene.load.image('bhMiniS2_9', './Puzzle-Assets/UI/GM BH Mini S02 9 Happy.webp');
@@ -173,6 +173,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_GM4BFBTECE', './Puzzle-Assets/UI/GM 4 Bhimbie into Futuristic Bag Shed a Tear CE.webp');
     scene.load.image('bhMiniS2_GM4BBFBTE', './Puzzle-Assets/UI/GM 4B Bhimbie into Futuristic Bag Shed a Tear.webp');
     scene.load.image('bhMiniS2_GM4BBFBTECE', './Puzzle-Assets/UI/GM 4B Bhimbie into Futuristic Bag Shed a Tear CE.webp');
+    scene.load.image('bhMiniS2_GM4BBFBTESOS', './Puzzle-Assets/UI/GM 4B Bhimbie into Futuristic Bag Shed a Tear So Sad.webp');
     scene.load.image('bhMiniS2_GM5BFBCVS', './Puzzle-Assets/UI/GM 5 Bhimbie into Futuristic Bag Closed Very Sad.webp');
     scene.load.image('bhMiniS2_GM5BFBCVS1', './Puzzle-Assets/UI/GM 5 Bhimbie into Futuristic Bag Closed Very Sad1.webp');
     scene.load.image('bhMiniS2_GM5BFBCVS2', './Puzzle-Assets/UI/GM 5 Bhimbie into Futuristic Bag Closed Very Sad2.webp');
