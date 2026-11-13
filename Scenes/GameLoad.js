@@ -28,6 +28,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     
     // Elemen Tanah/Rumput
     scene.load.image('grassL1', './Puzzle-Assets/UI/FG Grass04.webp');
+    scene.load.image("puzzleDust", "./Puzzle-Assets/UI/Grain Dust.webp");
     
     // Elemen Makanan/Buah
     scene.load.image('carrot', './Puzzle-Assets/UI/FC Carrot.webp');
