@@ -126,6 +126,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.audio('horsehoofstep', './Puzzle-Assets/Sfx/sound/hoof_step.mp3');
     scene.load.audio('horseGallop', './Puzzle-Assets/Sfx/sound/blackhorse_gallop.mp3');
     scene.load.audio('herdGallop', './Puzzle-Assets/Sfx/sound/herd_gallop.mp3');
+    scene.load.audio('bhimbieWinner', './Puzzle-Assets/Sfx/music favorites/Bhimbie Winner_s_Carousel2.mp3');
   // SERIES 02 Blank and head Black Horse 
     scene.load.image('blankBhL2', './Puzzle-Assets/UI/Blank Black Horse Level01S02.webp'); 
     scene.load.image('displayBhL2', './Puzzle-Assets/UI/GM BH DisplayS02.webp');
