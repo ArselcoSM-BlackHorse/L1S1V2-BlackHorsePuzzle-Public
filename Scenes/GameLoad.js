@@ -167,7 +167,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_12O', './Puzzle-Assets/UI/GM BH Mini S02 12O Cold Sit.webp');
     scene.load.image('bhMiniS2_12OS', './Puzzle-Assets/UI/GM BH Mini S02 12O Cold Sit Snow.webp');
     scene.load.image('bhMiniS2_12CE', './Puzzle-Assets/UI/GM BH Mini S02 12CE Cold Sit .webp');
-    scene.load.image('bhMiniS2_12OCS', './Puzzle-Assets/UI/GM BH Mini S02 12O Cold Snow.webp');
+    scene.load.image('bhMiniS2_12OCS', './Puzzle-Assets/UI/GM BH Mini S02 12O Snow.webp');
     scene.load.image('bhMiniS2_12OSCE', './Puzzle-Assets/UI/GM BH Mini S02 12O Snow Closed Eyes.webp');
     scene.load.image('bhMiniS2_13HFS', './Puzzle-Assets/UI/GM BhMiniS2 Hand Frozen With Snow.webp'); // Frozen 50%
     scene.load.image('bhMiniS2_13HFSCE', './Puzzle-Assets/UI/GM BhMiniS2 Hand Frozen With Snow Closed Eyes.webp'); // Frozen 50% Closed Eyes
