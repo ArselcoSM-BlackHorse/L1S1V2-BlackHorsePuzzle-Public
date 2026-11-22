@@ -150,6 +150,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_8Q', './Puzzle-Assets/UI/GM BH Mini S02 8 Question.webp');
     scene.load.image('bhMiniS2_8NQ', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked No Question Mark.webp');
     scene.load.image('bhMiniS2_8NQFF', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked No Question Mark Feet Frozen.webp'); // Frozen 30%
+    scene.load.image('bhMiniS2_8NQFFCE', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked No Question Mark Feet Frozen CE.webp'); // Frozen 30% Closed Eyes
     //scene.load.image('bhMiniS2_8CE', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked Closed Eyes.webp');
     scene.load.image('bhMiniS2_8CENQ', './Puzzle-Assets/UI/GM BH Mini S02 8 oh Blocked Closed Eyes NQ.webp');
     scene.load.image('bhMiniS2_9AC', './Puzzle-Assets/UI/GM BH Mini S02 9 Happy Accept Candy.webp');
@@ -169,7 +170,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_12OS', './Puzzle-Assets/UI/GM BH Mini S02 12O Cold Sit Snow.webp');
     scene.load.image('bhMiniS2_12CE', './Puzzle-Assets/UI/GM BH Mini S02 12CE Cold Sit .webp');
     scene.load.image('bhMiniS2_12OCS', './Puzzle-Assets/UI/GM BH Mini S02 12O Snow.webp');
-    scene.load.image('bhMiniS2_12OSCE', './Puzzle-Assets/UI/GM BH Mini S02 12O Snow Closed Eyes.webp');
+    scene.load.image('bhMiniS2_12OCSCE', './Puzzle-Assets/UI/GM BH Mini S02 12O Snow Closed Eyes.webp');
     scene.load.image('bhMiniS2_13HFS', './Puzzle-Assets/UI/GM BhMiniS2 Hand Frozen With Snow.webp'); // Frozen 50%
     scene.load.image('bhMiniS2_13HFSCE', './Puzzle-Assets/UI/GM BhMiniS2 Hand Frozen With Snow Closed Eyes.webp'); // Frozen 50% Closed Eyes
     scene.load.image('bhMiniS2_Z1', './Puzzle-Assets/UI/GM BH Mini S02 Icon Sleep Z1.webp');
