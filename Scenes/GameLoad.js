@@ -160,6 +160,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('bhMiniS2_9FD1', './Puzzle-Assets/UI/GM BhMiniS2 Dance1 Happy Free.webp'); // Bhimbie Dance1 Happy Free Celebration
     scene.load.image('bhMiniS2_9FD1CE', './Puzzle-Assets/UI/GM BhMiniS2 Dance1 Happy Free Closed Eyes.webp'); // Bhimbie Dance1 Happy Free Celebration
     scene.load.image('bhMiniS2_9FD2', './Puzzle-Assets/UI/GM BhMiniS2 Dance2 Happy Free.webp'); // matanya melihat keatas jadi tidak ada melek atau meremnya celebration
+    scene.load.image('bhMiniS2_9FD2R', './Puzzle-Assets/UI/GM BhMiniS2 Dance2R Happy Free.webp');
     scene.load.image('bhMiniS2_9FD3', './Puzzle-Assets/UI/GM BhMiniS2 Dance3 Happy Free.webp'); // Bhimbie Dance3 Happy Free Celebration
     scene.load.image('bhMiniS2_9FD3CE', './Puzzle-Assets/UI/GM BhMiniS2 Dance3 Happy Free Closed Eyes.webp'); // Bhimbie Dance3 Happy Free Celebration
     scene.load.image('bhMiniS2_10', './Puzzle-Assets/UI/GM BH Mini S02 10 Closed Eye Happy.webp');
