@@ -93,7 +93,7 @@
   <style>
      html, body {
         /* Gunakan background netral/gelap sederhana agar tidak ada jeda warna yang kontras */
-        background: #181c24;/*#110d08*/
+        background: #110d08;/*#110d08*/
         color: #e8a84f;
         overflow-x: hidden !important;
         width: 100vw !important;
@@ -119,7 +119,7 @@
         background: linear-gradient(180deg, rgba(43, 29, 20, 0.96) 0%, rgba(65, 43, 28, 0.92) 100%);
         border: 1px solid rgba(79, 215, 232, 0.26);
         box-shadow:
-          0 12px 48px rgba(0, 0, 0, 0.42),
+          0 12px 48px rgba(0, 0, 0, 0.42)/*0,0,0,0.42*/,
           0 0 22px rgba(79, 215, 232, 0.10),
           inset 0 0 18px rgba(236, 141, 6, 0.08);
       }
@@ -138,6 +138,7 @@
       canvas {
         display: block;
         max-width: 100vw;
+        max-height: 100vh;
         margin: 0 auto;
       }
 

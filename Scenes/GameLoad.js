@@ -111,6 +111,7 @@ window.GameLoad.preloadAllAssets = function(scene) {
     scene.load.image('claimHatC', './Puzzle-Assets/UI/GM Claim Hat Coklat.webp');
     scene.load.image('candySunset', './Puzzle-Assets/UI/GM CandySunset.webp');
     scene.load.image('candyCyan', './Puzzle-Assets/UI/GM CandyCyan.webp');
+    scene.load.image('clock231126', './Puzzle-Assets/UI/GM My Clock 231126.webp');
   //scene.load.image('gameOver', './Puzzle-Assets/UI/GM. Game Over.webp');
   //Audio and Sound
     scene.load.image('soundOn', './Puzzle-Assets/UI/GM Sound On.webp');
